@@ -15,24 +15,24 @@ func (s *Session) GetSession() string {
 }
 
 type AuthRequest struct {
-	Domain   string `json:"domain"`
+	Domain
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
 type AuthResponse struct {
-	Session      `json:"session"`
-	SuccessError `json:"result"`
+	Session
+	SuccessError
 }
 
 type LogoutRequest struct {
-	Session `json:"session"`
+	Session
 }
 
 type LogoutResponse SuccessErrorOnly
 
 type CheckInviteRequest struct {
-	Domain     string `json:"domain"`
+	Domain
 	InviteCode string `json:"invite_code"`
 	InvitePass string `json:"invite_pass"`
 }
@@ -40,8 +40,8 @@ type CheckInviteRequest struct {
 type ConfirmInviteRequest CheckInviteRequest
 
 type CheckInviteResponse struct {
-	SuccessError `json:"result"`
-	Invite       base.DomainInvite `json:"invite"`
+	SuccessError
+	Invite base.DomainInvite `json:"invite"`
 }
 
 type ConfirmInviteResponse SuccessErrorOnly

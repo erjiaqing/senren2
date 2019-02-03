@@ -5,19 +5,19 @@ import "github.com/erjiaqing/senren2/pkg/types/base"
 type GetDiscussionRequest GetDomainObjectRequest
 
 type GetDiscussionResponse struct {
-	SuccessError `json:"result"`
-	Discussion   *base.Discussion `json:"discussion"`
+	SuccessError
+	Discussion *base.Discussion `json:"discussion"`
 }
 
 type GetDiscussionsRequest GetDomainObjectsRequest
 
 type GetDiscussionsResponse struct {
-	SuccessError `json:"result"`
-	Discussions  []*base.Discussion `json:"discussions"`
+	SuccessError
+	Discussions []*base.Discussion `json:"discussions"`
 }
 
 type CreateDiscussionsRequest struct {
-	Session    `json:"session"`
+	Session
 	Discussion base.Discussion `json:"discussion"`
 }
 

@@ -97,16 +97,22 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		w.WriteHeader(400)
+		w.WriteHeader(500)
+		w.Write([]byte(err.Error()))
 		return
 	}
 	if err := json.Unmarshal(body, req); err != nil {
 		w.WriteHeader(400)
+		w.Write([]byte(err.Error()))
 		return
 	}
 
 	state := make(map[string]string)
-	// do middle ware
+	// do middleware
+
+	if dom, ok := req.(senrenrpc.HasDomain); ok {
+		dom.Convert()
+	}
 
 	switch params["method"] {
 	case "authUser":

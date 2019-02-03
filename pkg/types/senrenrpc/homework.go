@@ -5,26 +5,26 @@ import "github.com/erjiaqing/senren2/pkg/types/base"
 type GetHomeworkRequest GetDomainObjectRequest
 
 type GetHomeworkResponse struct {
-	SuccessError `json:"result"`
-	Homework     *base.Homework `json:"homework"`
+	SuccessError
+	Homework *base.Homework `json:"homework"`
 }
 
 type GetHomeworksRequest GetDomainObjectsRequest
 
 type GetHomeworksResponse struct {
-	SuccessError `json:"result"`
-	Homeworks    []*base.Homework `json:"homeworks"`
+	SuccessError
+	Homeworks []*base.Homework `json:"homeworks"`
 }
 
 type CreateHomeworkRequest struct {
-	Session  `json:"session"`
+	Session
 	Homework base.Homework `json:"homework"`
 }
 
 type CreateHomeworkResponse CreateDomainObjectResponse
 
 type CreateHomeworkSubmissionRequest struct {
-	Session            `json:"session"`
+	Session
 	HomeworkSubmission base.HomeworkSubmission `json:"homeworksubmission"`
 }
 
@@ -33,13 +33,13 @@ type CreateHomeworkSubmissionResponse CreateDomainObjectResponse
 type GetHomeworkSubmissionRequest GetDomainObjectRequest
 
 type GetHomeworkSubmissionResponse struct {
-	SuccessError       `json:"result"`
+	SuccessError
 	HomeworkSubmission *base.HomeworkSubmission `json:"homeworksubmission"`
 }
 
 type GetHomeworkSubmissionsRequest GetDomainObjectsRequest
 
 type GetHomeworkSubmissionsResponse struct {
-	SuccessError        `json:"result"`
+	SuccessError
 	HomeworkSubmissions []*base.HomeworkSubmission `json:"homeworksubmissions"`
 }

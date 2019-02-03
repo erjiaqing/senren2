@@ -19,7 +19,7 @@ type GetSubmissionsResponse struct {
 }
 
 type CreateSubmissionsRequest struct {
-	Session    `json:"session"`
+	Session
 	Submission base.Submission `json:"submission"`
 }
 

@@ -64,6 +64,6 @@ func createContest(ctx context.Context, req *senrenrpc.CreateContestRequest, sta
 		return
 	}
 	res.Success = true
-	res.Domain = req.Contest.Domain
+	res.Domain = senrenrpc.Domain(req.Contest.Domain)
 	res.UID = req.Contest.Uid
 }

@@ -11,7 +11,7 @@ import (
 
 func getProblem(ctx context.Context, req *senrenrpc.GetProblemRequest, state map[string]string, res *senrenrpc.GetProblemResponse) {
 	r := &base.Problem{}
-	row := db.DB.QueryRow("SELECT uid, rootid, domain, title, content, releasetime, problemci, score, language_limit FROM problem WHERE uid = ? AND domain = ?", req.UID, req.Domain)
+	row := db.DB.QueryRow("SELECT uid, rootuid, domain, title, content, releasetime, problemci, score, language_limit FROM problem WHERE uid = ? AND domain = ?", req.UID, req.Domain)
 	if err := row.Scan(&r.Uid, &r.RootUid, &r.Domain, &r.Title, &r.Description, &r.ReleaseTime, &r.ProblemCI, &r.Score, &r.LanguageLimit); err != nil {
 		res.Success = false
 		res.Error = err.Error()
@@ -47,7 +47,7 @@ func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state m
 }
 
 func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, state map[string]string, res *senrenrpc.CreateProblemResponse) {
-	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ? WHERE uid = ? AND rootuid = ? AND domain = ?"
+	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ? WHERE uid = ? AND (rootuid = ? OR 1 = 1) AND domain = ?"
 	if req.Problem.Uid == "" || req.Problem.Uid == noUID {
 		req.Problem.Uid = util.GenUid()
 		if req.Problem.RootUid == "" {
@@ -62,7 +62,7 @@ func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, sta
 		return
 	}
 
-	res.Domain = req.Problem.Domain
+	res.Domain = senrenrpc.Domain(req.Problem.Domain)
 	res.UID = req.Problem.Uid
 	res.Success = true
 }

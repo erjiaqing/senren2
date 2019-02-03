@@ -7,19 +7,19 @@ import (
 type GetContestRequest GetDomainObjectRequest
 
 type GetContestResponse struct {
-	SuccessError `json:"result"`
-	Contest      *base.Contest `json:"contest"`
+	SuccessError
+	Contest *base.Contest `json:"contest"`
 }
 
 type GetContestsRequest GetDomainObjectsRequest
 
 type GetContestsResponse struct {
-	SuccessError `json:"result"`
-	Contests     []*base.Contest `json:"contests"`
+	SuccessError
+	Contests []*base.Contest `json:"contests"`
 }
 
 type CreateContestRequest struct {
-	Session `json:"session"`
+	Session
 	Contest base.Contest `json:"problem"`
 }
 
