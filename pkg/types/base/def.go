@@ -19,6 +19,7 @@ type Problem struct {
 	Uid           string    `json:"uid"`
 	RootUid       string    `json:"root_uid"`
 	Domain        string    `json:"domain"`
+	Alias         string    `json:"alias"`
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`
 	ReleaseTime   time.Time `json:"release"`

@@ -11,8 +11,16 @@ import (
 
 func getProblem(ctx context.Context, req *senrenrpc.GetProblemRequest, state map[string]string, res *senrenrpc.GetProblemResponse) {
 	r := &base.Problem{}
-	row := db.DB.QueryRow("SELECT uid, rootuid, domain, title, content, releasetime, problemci, score, language_limit FROM problem WHERE uid = ? AND domain = ?", req.UID, req.Domain)
-	if err := row.Scan(&r.Uid, &r.RootUid, &r.Domain, &r.Title, &r.Description, &r.ReleaseTime, &r.ProblemCI, &r.Score, &r.LanguageLimit); err != nil {
+	queryString := "SELECT uid, rootuid, domain, alias, title, content, releasetime, problemci, score, language_limit FROM problem WHERE uid = ? AND domain = ?"
+	if len(req.UID) != 16 && len(req.UID) <= 8 {
+		queryString = "SELECT uid, rootuid, domain, alias, title, content, releasetime, problemci, score, language_limit FROM problem WHERE alias = ? AND domain = ?"
+	} else if len(req.UID) != 16 {
+		res.Success = false
+		res.Error = "illegal problem uid or alias name"
+		return
+	}
+	row := db.DB.QueryRow(queryString, req.UID, req.Domain)
+	if err := row.Scan(&r.Uid, &r.RootUid, &r.Domain, &r.Alias, &r.Title, &r.Description, &r.ReleaseTime, &r.ProblemCI, &r.Score, &r.LanguageLimit); err != nil {
 		res.Success = false
 		res.Error = err.Error()
 		return
@@ -22,7 +30,7 @@ func getProblem(ctx context.Context, req *senrenrpc.GetProblemRequest, state map
 }
 
 func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state map[string]string, res *senrenrpc.GetProblemsResponse) {
-	row, err := db.DB.Query("SELECT uid, rootuid, domain, title, score FROM problem WHERE domain = ?", req.Domain)
+	row, err := db.DB.Query("SELECT uid, rootuid, domain, alias, title, score, releasetime FROM problem WHERE domain = ?", req.Domain)
 	if err != nil {
 		res.Success = false
 		res.Error = err.Error()
@@ -33,7 +41,7 @@ func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state m
 
 	for row.Next() {
 		r := &base.Problem{}
-		if err := row.Scan(&r.Uid, &r.RootUid, &r.Domain, &r.Title, &r.Score); err != nil {
+		if err := row.Scan(&r.Uid, &r.RootUid, &r.Domain, &r.Alias, &r.Title, &r.Score, &r.ReleaseTime); err != nil {
 			row.Close()
 			res.Success = false
 			res.Error = err.Error()
@@ -47,16 +55,16 @@ func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state m
 }
 
 func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, state map[string]string, res *senrenrpc.CreateProblemResponse) {
-	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ? WHERE uid = ? AND (rootuid = ? OR 1 = 1) AND domain = ?"
+	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ?, alias = ? WHERE uid = ? AND (rootuid = ? OR 1 = 1) AND domain = ?"
 	if req.Problem.Uid == "" || req.Problem.Uid == noUID {
 		req.Problem.Uid = util.GenUid()
 		if req.Problem.RootUid == "" {
 			req.Problem.RootUid = req.Problem.Uid
 		}
-		dbExec = "INSERT INTO problem (title, content, releasetime, problemci, score, language_limit, uid, rootuid, domain) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		dbExec = "INSERT INTO problem (title, content, releasetime, problemci, score, language_limit, alias, uid, rootuid, domain) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	}
 
-	if _, err := db.DB.Exec(dbExec, req.Problem.Title, req.Problem.Description, req.Problem.ReleaseTime, req.Problem.ProblemCI, req.Problem.Score, req.Problem.LanguageLimit, req.Problem.Uid, req.Problem.RootUid, req.Problem.Domain); err != nil {
+	if _, err := db.DB.Exec(dbExec, req.Problem.Title, req.Problem.Description, req.Problem.ReleaseTime, req.Problem.ProblemCI, req.Problem.Score, req.Problem.LanguageLimit, req.Problem.Alias, req.Problem.Uid, req.Problem.RootUid, req.Problem.Domain); err != nil {
 		res.Success = false
 		res.Error = err.Error()
 		return

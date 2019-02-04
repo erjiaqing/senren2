@@ -10,6 +10,8 @@ import VueAxios from 'vue-axios'
 Vue.config.productionTip = false
 
 Vue.use(VueAxios, axios)
+Vue.use(require('vue-moment'))
+Vue.use(require('tinymce'))
 
 new Vue({
   router,
