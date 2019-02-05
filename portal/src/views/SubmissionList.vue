@@ -1,52 +1,78 @@
 <template>
-  <el-table
-    :data="submissions"
-    style="width: 100%"
-  >
-    <el-table-column
-      label="评测结果"
-      width="200pt"
+  <div>
+    <el-alert
+      title="显示的是经过筛选的提交列表"
+      v-if="filterApplied"
+      type="info"
     >
-      <template slot-scope="scope">
-        <span v-if="tags['JUDGE_TAG_' + scope.row.verdict]">
-          <el-tag :type="tags['JUDGE_TAG_' + scope.row.verdict][0]">{{ tags['JUDGE_TAG_' + scope.row.verdict][1] }}</el-tag>
-        </span>
-        <span v-else>
-          <el-tag>Unknown {{ scope.row.verdict }}</el-tag>
-        </span>
-      </template>
-    </el-table-column>
-    <el-table-column label="试题">
-      <template slot-scope="scope">
-        <router-link :to="'/' + $route.params.domain + '/problem/' + scope.row.problem_uid">{{ scope.row.problem_title }}</router-link>
-      </template>
-    </el-table-column>
-    <el-table-column label="用户">
-      <template slot-scope="scope">
-        <router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link>
-      </template>
-    </el-table-column>
-    <el-table-column label="语言">
-      <template slot-scope="scope">
-        {{ languageAbbr[scope.row.language] }}
-      </template>
-    </el-table-column>
-    <el-table-column label="运行时间">
-      <template slot-scope="scope">
-        {{ (scope.row.execute_time < 0) ? '-' : ((scope.row.execute_time) + " ms") }}
-      </template>
-    </el-table-column>
-    <el-table-column label="使用内存">
-      <template slot-scope="scope">
-        {{ (scope.row.execute_memory < 0) ? '-' : ((scope.row.execute_memory) + " KiB") }}
-      </template>
-    </el-table-column>
-    <el-table-column label="提交时间">
-      <template slot-scope="scope">
-        {{ scope.row.submit_time }}
-      </template>
-    </el-table-column>
-  </el-table>
+    </el-alert>
+    <el-table
+      :data="submissions"
+      style="width: 100%"
+    >
+      <el-table-column
+        label="评测结果"
+        width="200pt"
+      >
+        <template slot-scope="scope">
+          <span v-if="tags['JUDGE_TAG_' + scope.row.verdict]">
+            <el-tag :type="tags['JUDGE_TAG_' + scope.row.verdict][0]">{{ tags['JUDGE_TAG_' + scope.row.verdict][1] }}</el-tag>
+          </span>
+          <span v-else>
+            <el-tag>Unknown {{ scope.row.verdict }}</el-tag>
+          </span>
+        </template>
+      </el-table-column>
+      <el-table-column label="试题">
+        <template slot-scope="scope">
+          <router-link :to="'/' + $route.params.domain + '/problem/' + scope.row.problem_uid">{{ scope.row.problem_title }}</router-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="用户">
+        <template slot-scope="scope">
+          <router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="语言">
+        <template slot-scope="scope">
+          <router-link :to="'/' + $route.params.domain + '/submission/' + scope.row.uid" >{{ languageAbbr[scope.row.language] }}</router-link>
+        </template>
+      </el-table-column>
+      <el-table-column label="运行时间">
+        <template slot-scope="scope">
+          {{ (scope.row.execute_time <
+            0)
+            ? '-'
+            :
+            ((scope.row.execute_time)
+            + " ms"
+            )
+            }}
+            </template>
+            </el-table-column>
+            <el-table-column
+            label="使用内存"
+          >
+            <template slot-scope="scope">
+              {{ (scope.row.execute_memory <
+                0)
+                ? '-'
+                :
+                ((scope.row.execute_memory)
+                + " KiB"
+                )
+                }}
+                </template>
+                </el-table-column>
+                <el-table-column
+                label="提交时间"
+              >
+                <template slot-scope="scope">
+                  {{ scope.row.submit_time }}
+                </template>
+      </el-table-column>
+    </el-table>
+  </div>
 </template>
 
 <script>
@@ -62,6 +88,8 @@ export default {
       codeEditor: false,
       code: "",
       tags: ConstString,
+      filterApplied: false,
+      filter: [],
       languageAbbr: {
         "c.gcc99": "C",
         "cpp.gxx98": "C++",
@@ -78,9 +106,21 @@ export default {
   methods: {
     loadSubmission: async function() {
       this.loading = true;
+      this.filterApplied = false;
+      let filter = (this.$route.params.filter || "").split(";");
+      while (filter.length < 3) {
+        filter.push("");
+      }
+      filter.forEach(element => {
+        if (element != "") {
+          this.filterApplied = true;
+        }
+      });
+      filter[2] = filter[2].split(",");
+      //
       let res = await RPC.doRPC("getSubmissions", {
         domain: this.$route.params.domain,
-        filter: this.$route.params.filter || "",
+        filter: this.$route.params.filter || ""
       });
       this.loading = false;
       if (res == null) {
@@ -88,6 +128,11 @@ export default {
         return;
       }
       this.submissions = res.submissions;
+    }
+  },
+  watch: {
+    $route: function() {
+      this.loadSubmission();
     }
   },
   created() {

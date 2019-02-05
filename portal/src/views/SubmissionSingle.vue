@@ -57,9 +57,35 @@
             </el-form-item>
             <el-form-item
               class="submission_metainfo_item"
-              label="提交时间"
+              label="使用时间"
             >
-              {{ submission.submit_time }}
+              {{ (submission.execute_time <
+                0)
+                ? '-'
+                :
+                ((submission.execute_time)
+                + " ms"
+                )
+                }}
+                </el-form-item>
+                <el-form-item
+                class="submission_metainfo_item"
+                label="使用内存"
+              >
+                {{ (submission.execute_memory <
+                  0)
+                  ? '-'
+                  :
+                  ((submission.execute_memory)
+                  + " ms"
+                  )
+                  }}
+                  </el-form-item>
+                  <el-form-item
+                  class="submission_metainfo_item"
+                  label="提交时间"
+                >
+                  {{ submission.submit_time }}
             </el-form-item>
             <el-form-item
               class="submission_metainfo_item"
@@ -72,11 +98,14 @@
         <editor
           v-model="code"
           @init="editorInit"
+          :options="{readOnly: true}"
           :lang="codeHighlight"
           theme="chrome"
           width="100%"
           height="300px"
         ></editor>
+        <h3 v-if="submission.ce_message != ''">编译器输出</h3>
+        <pre style="font-size: 12pt">{{ submission.ce_message }}</pre>
       </div>
     </el-col>
   </el-row>
@@ -201,7 +230,7 @@ export default {
     }
   },
   watch: {
-    '$route': function() {
+    $route: function() {
       this.loadProblem();
     }
   },

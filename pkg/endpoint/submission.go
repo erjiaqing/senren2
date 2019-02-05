@@ -41,7 +41,7 @@ func getSubmissions(ctx context.Context, req *senrenrpc.GetSubmissionsRequest, s
 	r := make([]*base.Submission, 0)
 	query := "SELECT submission.uid, submission.user_uid, IFNULL(user.nickname, ''), submission.domain, submission.problem_uid, problem.title, submission.contest_uid, submission.lang, submission.execute_time, submission.execute_memory, submission.state, submission.verdict, submission.testcase, submission.score, submission.submit_time FROM submission LEFT JOIN problem ON submission.problem_uid = problem.uid LEFT JOIN user ON submission.user_uid = user.uid WHERE submission.domain = ? "
 	limits := strings.Split(req.Filter, ";")
-	limits = append(limits, make([]string, 2)...)
+	limits = append(limits, make([]string, 3)...)
 	whereArgs := []interface{}{string(req.Domain)}
 	if limits[0] != "" {
 		query += " AND submission.problem_uid = ? "
@@ -50,6 +50,15 @@ func getSubmissions(ctx context.Context, req *senrenrpc.GetSubmissionsRequest, s
 	if limits[1] != "" {
 		query += " AND submission.user_uid = ? "
 		whereArgs = append(whereArgs, limits[1])
+	}
+	if limits[2] != "" {
+		tquery := strings.Split(limits[2], ",")
+		tArg := " 0 = 1 "
+		for _, t := range tquery {
+			tArg += " OR submission.verdict = ? "
+			whereArgs = append(whereArgs, t)
+		}
+		query += "AND (" + tArg + ")"
 	}
 
 	rows, err := db.DB.QueryContext(ctx, query, whereArgs...)
