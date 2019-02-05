@@ -90,6 +90,9 @@ type Submission struct {
 	CEMessage      string    `json:"ce_message"`
 	SubmitTime     time.Time `json:"submit_time"`
 	JudgeTime      time.Time `json:"judge_time"`
+
+	ProblemTitle string `json:"problem_title"`
+	UserName     string `json:"user_name"`
 }
 
 type DomainInfo struct {

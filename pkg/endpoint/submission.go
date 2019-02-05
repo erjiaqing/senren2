@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/erjiaqing/senren2/pkg/db"
@@ -37,5 +38,39 @@ func getSubmission(ctx context.Context, req *senrenrpc.GetSubmissionRequest, sta
 }
 
 func getSubmissions(ctx context.Context, req *senrenrpc.GetSubmissionsRequest, state map[string]string, res *senrenrpc.GetSubmissionsResponse) {
+	r := make([]*base.Submission, 0)
+	query := "SELECT submission.uid, submission.user_uid, IFNULL(user.nickname, ''), submission.domain, submission.problem_uid, problem.title, submission.contest_uid, submission.lang, submission.execute_time, submission.execute_memory, submission.state, submission.verdict, submission.testcase, submission.score, submission.submit_time FROM submission LEFT JOIN problem ON submission.problem_uid = problem.uid LEFT JOIN user ON submission.user_uid = user.uid WHERE submission.domain = ? "
+	limits := strings.Split(req.Filter, ";")
+	limits = append(limits, make([]string, 2)...)
+	whereArgs := []interface{}{string(req.Domain)}
+	if limits[0] != "" {
+		query += " AND submission.problem_uid = ? "
+		whereArgs = append(whereArgs, limits[0])
+	}
+	if limits[1] != "" {
+		query += " AND submission.user_uid = ? "
+		whereArgs = append(whereArgs, limits[1])
+	}
 
+	rows, err := db.DB.QueryContext(ctx, query, whereArgs...)
+
+	if err != nil {
+		res.Error = err.Error()
+		res.Success = false
+		return
+	}
+
+	for rows.Next() {
+		t := &base.Submission{}
+		if err := rows.Scan(&t.Uid, &t.UserUid, &t.UserName, &t.Domain, &t.ProblemUid, &t.ProblemTitle, &t.ContestUid, &t.Language, &t.ExecuteTime, &t.ExecuteMemory, &t.Status, &t.Verdict, &t.Testcase, &t.Score, &t.SubmitTime); err != nil {
+			rows.Close()
+			res.Error = err.Error()
+			res.Success = false
+			return
+		}
+		r = append(r, t)
+	}
+
+	res.Success = true
+	res.Submissions = r
 }

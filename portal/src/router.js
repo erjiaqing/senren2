@@ -4,6 +4,7 @@ import Home from './views/Home.vue'
 import ProblemSingle from './views/ProblemSingle.vue'
 import ProblemList from './views/ProblemList.vue'
 import ProblemEditor from './views/ProblemEditor.vue'
+import SubmissionList from './views/SubmissionList.vue'
 import SubmissionSingle from './views/SubmissionSingle.vue'
 
 Vue.use(Router)
@@ -36,6 +37,16 @@ export default new Router({
           path: 'problem/:uid/edit',
           name: 'problem_editor',
           component: ProblemEditor,
+        },
+        {
+          path: 'submissions/:filter',
+          name: 'submission_list_filter',
+          component: SubmissionList,
+        },
+        {
+          path: 'submissions',
+          name: 'submission_list',
+          component: SubmissionList,
         },
         {
           path: 'submission/:uid',

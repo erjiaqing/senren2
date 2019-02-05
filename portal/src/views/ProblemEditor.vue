@@ -131,6 +131,9 @@ export default {
     saveProblem: async function() {
       this.loading = true;
       this.problem.release = new Date(this.problem.release);
+      if (this.problem.domain == "") {
+        this.problem.domain = this.$route.params.domain;
+      }
       let res = await RPC.doRPC("createProblem", {
         problem: this.problem
       });
@@ -139,6 +142,15 @@ export default {
         this.error = true;
         return;
       }
+      if (this.problem.uid == "" || this.problem.uid == "0000000000000000") {
+        this.problem.uid = res.uid;
+        this.$router.push(`/${this.$route.params.domain}/problem/${res.uid}/edit`)
+      }
+    }
+  },
+  watch: {
+    '$route': function() {
+      this.loadProblem();
     }
   },
   created() {

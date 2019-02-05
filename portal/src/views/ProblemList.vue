@@ -1,24 +1,34 @@
 <template>
-  <el-table
-    :data="problems"
-    style="width: 100%"
-  >
-    <el-table-column
-      label=""
-      width="72pt"
+  <div>
+    <div class="grid-content problem-title" style="text-align:left">
+      <el-button-group>
+        <el-button @click="$router.push('/' + $route.params.domain + '/problem/aaaaaaaaaaaaaaaa/edit')">+ 创建试题</el-button>
+      </el-button-group>
+    </div>
+    <el-table
+      :data="problems"
+      style="width: 100%"
     >
-      <template slot-scope="scope">
+      <el-table-column
+        label=""
+        width="72pt"
+      >
+        <template slot-scope="scope">
           <router-link :to="'/' + $route.params.domain + '/problem/' + scope.row.uid">{{ scope.row.alias }}</router-link>
-      </template>
-    </el-table-column>
-    <el-table-column
-      label="标题"
-    >
-      <template slot-scope="scope">
+        </template>
+      </el-table-column>
+      <el-table-column label="标题">
+        <template slot-scope="scope">
           <router-link :to="'/' + $route.params.domain + '/problem/' + scope.row.uid">{{ scope.row.title }}</router-link>
-      </template>
-    </el-table-column>
-  </el-table>
+        </template>
+      </el-table-column>
+    </el-table>
+    <div class="grid-content problem-title" style="text-align:left">
+      <el-button-group>
+        <el-button @click="$router.push('/' + $route.params.domain + '/problem/aaaaaaaaaaaaaaaa/edit')">+ 创建试题</el-button>
+      </el-button-group>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -30,14 +40,14 @@ export default {
       problems: [],
       loading: false,
       error: false,
-      codeEditor: false,
+      codeEditor: false
     };
   },
   methods: {
     loadProblem: async function() {
       this.loading = true;
       let res = await RPC.doRPC("getProblems", {
-        domain: this.$route.params.domain,
+        domain: this.$route.params.domain
       });
       this.loading = false;
       if (res == null) {
@@ -45,7 +55,7 @@ export default {
         return;
       }
       this.problems = res.problems;
-    },
+    }
   },
   created() {
     this.loadProblem();

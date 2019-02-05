@@ -14,7 +14,8 @@
             icon="el-icon-edit-outline"
             @click="codeEditor = !codeEditor"
           >{{ codeEditor ? '收起编辑器' : '代码编辑器' }}</el-button>
-          <el-button icon="el-icon-more">评测结果</el-button>
+          <el-button icon="el-icon-more"
+          @click="$router.push('/' + $route.params.domain + '/submissions/' + problem.uid)">评测结果</el-button>
           <el-button icon="el-icon-tickets">讨论区</el-button>
           <el-button
             icon="el-icon-edit"
@@ -246,6 +247,11 @@ export default {
       require("brace/mode/csharp");
       require("brace/theme/chrome");
       require("brace/snippets/javascript"); //snippet
+    }
+  },
+  watch: {
+    '$route': function() {
+      this.loadProblem();
     }
   },
   created() {

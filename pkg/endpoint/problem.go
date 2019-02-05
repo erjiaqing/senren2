@@ -2,6 +2,7 @@ package endpoint
 
 import (
 	"context"
+	"time"
 
 	"github.com/erjiaqing/senren2/pkg/db"
 	"github.com/erjiaqing/senren2/pkg/types/base"
@@ -17,6 +18,12 @@ func getProblem(ctx context.Context, req *senrenrpc.GetProblemRequest, state map
 	} else if len(req.UID) != 16 {
 		res.Success = false
 		res.Error = "illegal problem uid or alias name"
+		return
+	}
+	if req.UID == noUID {
+		r.ReleaseTime = time.Now()
+		res.Problem = r
+		res.Success = true
 		return
 	}
 	row := db.DB.QueryRow(queryString, req.UID, req.Domain)
@@ -61,6 +68,10 @@ func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, sta
 		if req.Problem.RootUid == "" {
 			req.Problem.RootUid = req.Problem.Uid
 		}
+
+		tDomain := senrenrpc.Domain(req.Problem.Domain)
+		tDomain.Convert()
+		req.Problem.Domain = string(tDomain)
 		dbExec = "INSERT INTO problem (title, content, releasetime, problemci, score, language_limit, alias, uid, rootuid, domain) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	}
 

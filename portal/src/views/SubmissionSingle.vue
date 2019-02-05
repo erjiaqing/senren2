@@ -200,6 +200,11 @@ export default {
       require("brace/snippets/javascript"); //snippet
     }
   },
+  watch: {
+    '$route': function() {
+      this.loadProblem();
+    }
+  },
   created() {
     this.loadSubmission();
   }

@@ -25,16 +25,16 @@ func authUser(ctx context.Context, req *senrenrpc.AuthRequest, state map[string]
 			res.Error = "Wrong Password"
 			return
 		}
-		qry := db.DB.QueryRow("SELECT `uid`, `username` FROM `user` WHERE `domain` = ? AND `username` = ?", publicDomain, req.Username)
+		qry := db.DB.QueryRow("SELECT `uid`, `username`, `nickname` FROM `user` WHERE `domain` = ? AND `username` = ?", publicDomain, req.Username)
 		if qry == nil {
 			res.Success = false
 			res.Error = "Failed when query database"
 			return
 		}
-		if err := qry.Scan(&user.Uid, &user.Username); err != nil {
+		if err := qry.Scan(&user.Uid, &user.Username, &user.Nickname); err != nil {
 			user.Uid = util.GenUid()
 			logrus.Infof("New user from olive: %s", user.Uid)
-			if _, err := db.DB.Exec("INSERT INTO `user` (`uid`, `username`, `domain`) VALUES (?, ?, ?)", user.Uid, req.Username, publicDomain); err != nil {
+			if _, err := db.DB.Exec("INSERT INTO `user` (`uid`, `username`, `nickname`, `domain`) VALUES (?, ?, ?, ?)", user.Uid, req.Username, req.Username, publicDomain); err != nil {
 				res.Success = false
 				res.Error = err.Error()
 				return

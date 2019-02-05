@@ -7,15 +7,15 @@ import (
 type GetSubmissionRequest GetDomainObjectRequest
 
 type GetSubmissionResponse struct {
-	SuccessError `json:"result"`
-	Submission   *base.Submission `json:"submission"`
+	SuccessError
+	Submission *base.Submission `json:"submission"`
 }
 
 type GetSubmissionsRequest GetDomainObjectsRequest
 
 type GetSubmissionsResponse struct {
-	SuccessError `json:"result"`
-	Submissions  []*base.Submission `json:"submissions"`
+	SuccessError
+	Submissions []*base.Submission `json:"submissions"`
 }
 
 type CreateSubmissionsRequest struct {
