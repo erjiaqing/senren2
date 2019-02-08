@@ -4,6 +4,9 @@ import Home from './views/Home.vue'
 import ProblemSingle from './views/ProblemSingle.vue'
 import ProblemList from './views/ProblemList.vue'
 import ProblemEditor from './views/ProblemEditor.vue'
+import ContestEditor from './views/ContestEditor.vue'
+import ContestSingle from './views/ContestSingle.vue'
+import ContestList from './views/ContestList.vue'
 import SubmissionList from './views/SubmissionList.vue'
 import SubmissionSingle from './views/SubmissionSingle.vue'
 
@@ -37,6 +40,21 @@ export default new Router({
           path: 'problem/:uid/edit',
           name: 'problem_editor',
           component: ProblemEditor,
+        },
+        {
+          path: 'contest/:uid',
+          name: 'contest_single',
+          component: ContestSingle,
+        },
+        {
+          path: 'contest/:uid/edit',
+          name: 'contest_editor',
+          component: ContestEditor,
+        },
+        {
+          path: 'contests',
+          name: 'contest_list',
+          component: ContestList,
         },
         {
           path: 'submissions/:filter',

@@ -18,7 +18,7 @@
               >
                 <el-button type="text" @click="$router.push('/' + ($route.params.domain ? $route.params.domain : ''))">主页</el-button>
                 <el-button type="text" @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/problems')">题库</el-button>
-                <el-button type="text">比赛</el-button>
+                <el-button type="text" @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/contests')">比赛</el-button>
                 <el-button type="text">小组</el-button>
               </div>
             </el-col>

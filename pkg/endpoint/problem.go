@@ -63,15 +63,17 @@ func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state m
 
 func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, state map[string]string, res *senrenrpc.CreateProblemResponse) {
 	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ?, alias = ? WHERE uid = ? AND (rootuid = ? OR 1 = 1) AND domain = ?"
+
+	tDomain := senrenrpc.Domain(req.Problem.Domain)
+	tDomain.Convert()
+	req.Problem.Domain = string(tDomain)
+
 	if req.Problem.Uid == "" || req.Problem.Uid == noUID {
 		req.Problem.Uid = util.GenUid()
 		if req.Problem.RootUid == "" {
 			req.Problem.RootUid = req.Problem.Uid
 		}
 
-		tDomain := senrenrpc.Domain(req.Problem.Domain)
-		tDomain.Convert()
-		req.Problem.Domain = string(tDomain)
 		dbExec = "INSERT INTO problem (title, content, releasetime, problemci, score, language_limit, alias, uid, rootuid, domain) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
 	}
 

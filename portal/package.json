@@ -9,6 +9,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "element-ui": "^2.4.5",
+    "terser": "^3.16.1",
     "tinymce": "^4.9.3",
     "vue": "^2.5.22",
     "vue-axios": "^2.1.4",

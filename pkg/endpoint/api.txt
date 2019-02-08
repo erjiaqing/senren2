@@ -15,3 +15,11 @@ createProblem *senrenrpc.CreateProblemRequest *senrenrpc.CreateProblemResponse
 createSubmission *senrenrpc.CreateSubmissionsRequest *senrenrpc.CreateSubmissionsResponse
 getSubmission *senrenrpc.GetSubmissionRequest *senrenrpc.GetSubmissionResponse
 getSubmissions *senrenrpc.GetSubmissionsRequest *senrenrpc.GetSubmissionsResponse
+getDomain *senrenrpc.GetDomainRequest *senrenrpc.GetDomainResponse
+getDomains *senrenrpc.GetDomainsRequest *senrenrpc.GetDomainsResponse
+createDomain *senrenrpc.CreateDomainRequest *senrenrpc.CreateDomainResponse
+getDomainInvite *senrenrpc.GetDomainInviteRequest *senrenrpc.GetDomainInviteResponse
+getDomainInvites *senrenrpc.GetDomainInvitesRequest *senrenrpc.GetDomainInvitesResponse
+createDomainInvite *senrenrpc.CreateDomainInviteRequest *senrenrpc.CreateDomainInviteResponse
+joinDomain *senrenrpc.JoinDomainRequest *senrenrpc.JoinDomainResponse
+updateDomainUser *senrenrpc.UpdateDomainUserRequest *senrenrpc.UpdateDomainUserResponse

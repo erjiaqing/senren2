@@ -61,7 +61,7 @@ func getSubmissions(ctx context.Context, req *senrenrpc.GetSubmissionsRequest, s
 		query += "AND (" + tArg + ")"
 	}
 
-	rows, err := db.DB.QueryContext(ctx, query, whereArgs...)
+	rows, err := db.DB.QueryContext(ctx, query+" ORDER BY submit_time DESC", whereArgs...)
 
 	if err != nil {
 		res.Error = err.Error()

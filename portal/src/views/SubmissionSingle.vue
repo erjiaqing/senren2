@@ -14,7 +14,7 @@
         <el-alert
           title="请求失败"
           type="error"
-          description="可能的原因：服务器故障、网络问题或试题不存在"
+          description="可能的原因：服务器故障、网络问题或提交不存在"
           show-icon
         >
         </el-alert>
@@ -70,28 +70,20 @@
                 </el-form-item>
                 <el-form-item
                 class="submission_metainfo_item"
-                label="使用内存"
-              >
-                {{ (submission.execute_memory <
-                  0)
-                  ? '-'
-                  :
-                  ((submission.execute_memory)
-                  + " ms"
-                  )
-                  }}
+                label="使用内存">
+                {{ (submission.execute_memory < 0) ? '-' : ((submission.execute_memory) + " ms") }}
                   </el-form-item>
                   <el-form-item
                   class="submission_metainfo_item"
                   label="提交时间"
                 >
-                  {{ submission.submit_time }}
+                  {{ submission.submit_time | moment("from", "now") }}
             </el-form-item>
             <el-form-item
               class="submission_metainfo_item"
               label="评测时间"
             >
-              {{ submission.judge_time }}
+                  {{ submission.judge_time | moment("from", "now") }}
             </el-form-item>
           </el-form>
         </div>

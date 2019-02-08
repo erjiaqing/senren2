@@ -13,6 +13,7 @@ Vue.use(VueAxios, axios)
 Vue.use(require('vue-moment'))
 Vue.use(require('tinymce'))
 
+
 new Vue({
   router,
   store,

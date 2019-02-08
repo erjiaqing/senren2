@@ -3,6 +3,8 @@
     <el-alert
       title="显示的是经过筛选的提交列表"
       v-if="filterApplied"
+      close-text="清除筛选"
+      @close="clearFilter"
       type="info"
     >
     </el-alert>
@@ -30,7 +32,8 @@
       </el-table-column>
       <el-table-column label="用户">
         <template slot-scope="scope">
-          <router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link>
+          <span v-if="scope.row.user_name != ''"><router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link></span>
+          <span v-else><i>Unknown</i></span>
         </template>
       </el-table-column>
       <el-table-column label="语言">
@@ -68,7 +71,7 @@
                 label="提交时间"
               >
                 <template slot-scope="scope">
-                  {{ scope.row.submit_time }}
+                  {{ scope.row.submit_time | moment("from", "now") }}
                 </template>
       </el-table-column>
     </el-table>
@@ -128,6 +131,9 @@ export default {
         return;
       }
       this.submissions = res.submissions;
+    },
+    clearFilter() {
+      this.$router.push(`/${this.$route.params.domain}/submissions`)
     }
   },
   watch: {
