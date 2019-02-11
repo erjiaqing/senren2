@@ -65,7 +65,7 @@ func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, sta
 	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ?, alias = ? WHERE uid = ? AND (rootuid = ? OR 1 = 1) AND domain = ?"
 
 	tDomain := senrenrpc.Domain(req.Problem.Domain)
-	tDomain.Convert()
+	tDomain.ConvertDomain()
 	req.Problem.Domain = string(tDomain)
 
 	if req.Problem.Uid == "" || req.Problem.Uid == noUID {

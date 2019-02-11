@@ -9,6 +9,10 @@ import ContestSingle from './views/ContestSingle.vue'
 import ContestList from './views/ContestList.vue'
 import SubmissionList from './views/SubmissionList.vue'
 import SubmissionSingle from './views/SubmissionSingle.vue'
+import DomainList from './views/DomainList.vue'
+import DomainEdit from './views/DomainEditor.vue'
+import DomainIndex from './views/DomainIndex.vue'
+import Login from './views/Login.vue'
 
 Vue.use(Router)
 
@@ -26,6 +30,11 @@ export default new Router({
       name: 'domain_home',
       component: Home,
       children: [
+        {
+          path: "/",
+          name: 'domain_index',
+          component: DomainIndex,
+        },
         {
           path: 'problems',
           name: 'problem_list',
@@ -70,6 +79,21 @@ export default new Router({
           path: 'submission/:uid',
           name: 'submission_single',
           component: SubmissionSingle,
+        },
+        {
+          path: 'login',
+          name: 'user_login',
+          component: Login,
+        },
+        {
+          path: 'domains',
+          name: 'domain_list',
+          component: DomainList,
+        },
+        {
+          path: 'edit',
+          name: 'domain_edit',
+          component: DomainEdit,
         },
       ]
     }

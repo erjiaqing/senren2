@@ -16,6 +16,15 @@ func createSubmission(ctx context.Context, req *senrenrpc.CreateSubmissionsReque
 	// TODO: 检查用户权限，检查试题存在性，检查语言合法性，推送到pci
 	req.Submission.Uid = util.GenUid()
 	req.Submission.SubmitTime = time.Now()
+
+	ok := true
+
+	if req.Submission.UserUid, ok = state["uid"]; !ok {
+		res.Success = false
+		res.Error = "Login Required"
+		return
+	}
+
 	if _, err := db.DB.ExecContext(ctx, "INSERT INTO submission (uid, user_uid, domain, problem_uid, contest_uid, lang, code, state, verdict, submit_time, judge_time, filename, execute_time, execute_memory, testcase, score, judger_response, ce_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		req.Submission.Uid, req.Submission.UserUid, req.Submission.Domain, req.Submission.ProblemUid, req.Submission.ContestUid, req.Submission.Language, req.Submission.Code, "PENDING", "PENDING", req.Submission.SubmitTime, req.Submission.SubmitTime, "", -1, -1, -1, -1, "{}", ""); err != nil {
 		panic(err)
@@ -61,7 +70,7 @@ func getSubmissions(ctx context.Context, req *senrenrpc.GetSubmissionsRequest, s
 		query += "AND (" + tArg + ")"
 	}
 
-	rows, err := db.DB.QueryContext(ctx, query+" ORDER BY submit_time DESC", whereArgs...)
+	rows, err := db.DB.QueryContext(ctx, query+" ORDER BY submit_time DESC LIMIT 50", whereArgs...)
 
 	if err != nil {
 		res.Error = err.Error()

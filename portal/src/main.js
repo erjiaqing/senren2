@@ -13,6 +13,16 @@ Vue.use(VueAxios, axios)
 Vue.use(require('vue-moment'))
 Vue.use(require('tinymce'))
 
+const EventBus = new Vue();
+
+Object.defineProperties(Vue.prototype, {
+  $bus: {
+    get: function () {
+      return EventBus
+    }
+  }
+});
+
 
 new Vue({
   router,

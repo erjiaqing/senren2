@@ -47,6 +47,9 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "logoutUser":
 		req = &senrenrpc.LogoutRequest{}
 		res = &senrenrpc.LogoutResponse{}
+	case "whoami":
+		req = &senrenrpc.WhoAmIRequest{}
+		res = &senrenrpc.WhoAmIResponse{}
 	case "getContest":
 		req = &senrenrpc.GetContestRequest{}
 		res = &senrenrpc.GetContestResponse{}
@@ -92,6 +95,36 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "getSubmissions":
 		req = &senrenrpc.GetSubmissionsRequest{}
 		res = &senrenrpc.GetSubmissionsResponse{}
+	case "getDomain":
+		req = &senrenrpc.GetDomainRequest{}
+		res = &senrenrpc.GetDomainResponse{}
+	case "getDomains":
+		req = &senrenrpc.GetDomainsRequest{}
+		res = &senrenrpc.GetDomainsResponse{}
+	case "createDomain":
+		req = &senrenrpc.CreateDomainRequest{}
+		res = &senrenrpc.CreateDomainResponse{}
+	case "getDomainInvite":
+		req = &senrenrpc.GetDomainInviteRequest{}
+		res = &senrenrpc.GetDomainInviteResponse{}
+	case "getDomainInvites":
+		req = &senrenrpc.GetDomainInvitesRequest{}
+		res = &senrenrpc.GetDomainInvitesResponse{}
+	case "createDomainInvite":
+		req = &senrenrpc.CreateDomainInviteRequest{}
+		res = &senrenrpc.CreateDomainInviteResponse{}
+	case "joinDomain":
+		req = &senrenrpc.JoinDomainRequest{}
+		res = &senrenrpc.JoinDomainResponse{}
+	case "getDomainUser":
+		req = &senrenrpc.GetDomainUserRequest{}
+		res = &senrenrpc.GetDomainUserResponse{}
+	case "getDomainUsers":
+		req = &senrenrpc.GetDomainUsersRequest{}
+		res = &senrenrpc.GetDomainUsersResponse{}
+	case "updateDomainUser":
+		req = &senrenrpc.UpdateDomainUserRequest{}
+		res = &senrenrpc.UpdateDomainUserResponse{}
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
@@ -108,10 +141,18 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state := make(map[string]string)
+
+	domain := "0000000000000000"
 	// do middleware
 
 	if dom, ok := req.(senrenrpc.HasDomain); ok {
-		dom.Convert()
+		dom.ConvertDomain()
+		domain = dom.GetDomain()
+		state["domain"] = domain
+	}
+
+	if session, ok := req.(senrenrpc.HasSession); ok {
+		checkLogin(ctx, session, domain, state)
 	}
 
 	switch params["method"] {
@@ -119,6 +160,8 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		authUser(ctx, req.(*senrenrpc.AuthRequest), state, res.(*senrenrpc.AuthResponse))
 	case "logoutUser":
 		logoutUser(ctx, req.(*senrenrpc.LogoutRequest), state, res.(*senrenrpc.LogoutResponse))
+	case "whoami":
+		whoami(ctx, req.(*senrenrpc.WhoAmIRequest), state, res.(*senrenrpc.WhoAmIResponse))
 	case "getContest":
 		getContest(ctx, req.(*senrenrpc.GetContestRequest), state, res.(*senrenrpc.GetContestResponse))
 	case "getContests":
@@ -149,6 +192,26 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getSubmission(ctx, req.(*senrenrpc.GetSubmissionRequest), state, res.(*senrenrpc.GetSubmissionResponse))
 	case "getSubmissions":
 		getSubmissions(ctx, req.(*senrenrpc.GetSubmissionsRequest), state, res.(*senrenrpc.GetSubmissionsResponse))
+	case "getDomain":
+		getDomain(ctx, req.(*senrenrpc.GetDomainRequest), state, res.(*senrenrpc.GetDomainResponse))
+	case "getDomains":
+		getDomains(ctx, req.(*senrenrpc.GetDomainsRequest), state, res.(*senrenrpc.GetDomainsResponse))
+	case "createDomain":
+		createDomain(ctx, req.(*senrenrpc.CreateDomainRequest), state, res.(*senrenrpc.CreateDomainResponse))
+	case "getDomainInvite":
+		getDomainInvite(ctx, req.(*senrenrpc.GetDomainInviteRequest), state, res.(*senrenrpc.GetDomainInviteResponse))
+	case "getDomainInvites":
+		getDomainInvites(ctx, req.(*senrenrpc.GetDomainInvitesRequest), state, res.(*senrenrpc.GetDomainInvitesResponse))
+	case "createDomainInvite":
+		createDomainInvite(ctx, req.(*senrenrpc.CreateDomainInviteRequest), state, res.(*senrenrpc.CreateDomainInviteResponse))
+	case "joinDomain":
+		joinDomain(ctx, req.(*senrenrpc.JoinDomainRequest), state, res.(*senrenrpc.JoinDomainResponse))
+	case "getDomainUser":
+		getDomainUser(ctx, req.(*senrenrpc.GetDomainUserRequest), state, res.(*senrenrpc.GetDomainUserResponse))
+	case "getDomainUsers":
+		getDomainUsers(ctx, req.(*senrenrpc.GetDomainUsersRequest), state, res.(*senrenrpc.GetDomainUsersResponse))
+	case "updateDomainUser":
+		updateDomainUser(ctx, req.(*senrenrpc.UpdateDomainUserRequest), state, res.(*senrenrpc.UpdateDomainUserResponse))
 	}
 
 	wbody, err := json.Marshal(res)

@@ -44,7 +44,7 @@ func main() {
 			continue
 		}
 		fmt.Printf(`case "%s":
-			%s(req.(%s), state, res.(%s))
+			%s(ctx, req.(%s), state, res.(%s))
 			`, spec[0], spec[0], spec[1], spec[2])
 	}
 }

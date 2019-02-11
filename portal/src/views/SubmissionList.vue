@@ -32,13 +32,10 @@
       </el-table-column>
       <el-table-column label="用户">
         <template slot-scope="scope">
-          <span v-if="scope.row.user_name != ''"><router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link></span>
+          <span v-if="scope.row.user_name != ''">
+            <router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link>
+          </span>
           <span v-else><i>Unknown</i></span>
-        </template>
-      </el-table-column>
-      <el-table-column label="语言">
-        <template slot-scope="scope">
-          <router-link :to="'/' + $route.params.domain + '/submission/' + scope.row.uid" >{{ languageAbbr[scope.row.language] }}</router-link>
         </template>
       </el-table-column>
       <el-table-column label="运行时间">
@@ -68,11 +65,16 @@
                 </template>
                 </el-table-column>
                 <el-table-column
-                label="提交时间"
+                label="语言"
               >
                 <template slot-scope="scope">
-                  {{ scope.row.submit_time | moment("from", "now") }}
+                  <router-link :to="'/' + $route.params.domain + '/submission/' + scope.row.uid">{{ languageAbbr[scope.row.language] }}</router-link>
                 </template>
+      </el-table-column>
+      <el-table-column label="提交时间">
+        <template slot-scope="scope">
+          {{ scope.row.submit_time | moment("from", "now") }}
+        </template>
       </el-table-column>
     </el-table>
   </div>
@@ -133,7 +135,7 @@ export default {
       this.submissions = res.submissions;
     },
     clearFilter() {
-      this.$router.push(`/${this.$route.params.domain}/submissions`)
+      this.$router.push(`/${this.$route.params.domain}/submissions`);
     }
   },
   watch: {

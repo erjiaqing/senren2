@@ -1,5 +1,6 @@
 authUser *senrenrpc.AuthRequest *senrenrpc.AuthResponse
 logoutUser *senrenrpc.LogoutRequest *senrenrpc.LogoutResponse
+whoami *senrenrpc.WhoAmIRequest *senrenrpc.WhoAmIResponse
 getContest *senrenrpc.GetContestRequest *senrenrpc.GetContestResponse
 getContests *senrenrpc.GetContestsRequest *senrenrpc.GetContestsResponse
 createContest *senrenrpc.CreateContestRequest *senrenrpc.CreateContestResponse
@@ -22,4 +23,6 @@ getDomainInvite *senrenrpc.GetDomainInviteRequest *senrenrpc.GetDomainInviteResp
 getDomainInvites *senrenrpc.GetDomainInvitesRequest *senrenrpc.GetDomainInvitesResponse
 createDomainInvite *senrenrpc.CreateDomainInviteRequest *senrenrpc.CreateDomainInviteResponse
 joinDomain *senrenrpc.JoinDomainRequest *senrenrpc.JoinDomainResponse
+getDomainUser *senrenrpc.GetDomainUserRequest *senrenrpc.GetDomainUserResponse
+getDomainUsers *senrenrpc.GetDomainUsersRequest *senrenrpc.GetDomainUsersResponse
 updateDomainUser *senrenrpc.UpdateDomainUserRequest *senrenrpc.UpdateDomainUserResponse

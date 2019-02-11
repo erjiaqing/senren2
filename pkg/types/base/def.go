@@ -3,7 +3,12 @@ package base
 import "time"
 
 type User struct {
-	Uid        string `json:"uid"`
+	Uid string `json:"uid"`
+	// user have different UID in different domains, however, they share a single GlobalUID
+	// in group 0000000000000000 or root group, GUid = Uid
+	// for Domain users, GUid = Uid, and no other records in database
+	// user can bind a domain user to a exist global user, thus set GUid to Uid in root group
+	GUid       string `json:"guid"`
 	Username   string `json:"username"`
 	Password   string `json:"password"`
 	Nickname   string `json:"nickname"`
@@ -96,9 +101,9 @@ type Submission struct {
 }
 
 type DomainInfo struct {
-	Uid         string `json:"domain_uid"`
-	ShortName   string `json:"short_name"`
-	Title       string `json:"domain_title"`
+	Uid         string `json:"uid"`
+	ShortName   string `json:"alias"`
+	Title       string `json:"title"`
 	Description string `json:"description"`
 	IsPublic    string `json:"is_public"`
 }

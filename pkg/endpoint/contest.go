@@ -65,7 +65,7 @@ func createContest(ctx context.Context, req *senrenrpc.CreateContestRequest, sta
 	dbExec := "UPDATE contest SET title = ?, content = ?, type = ?, problem_list = ?, start_time = ?, end_time = ?, open_time = ?, close_time = ?, freeze_time = ?, release_time = ? WHERE `uid` = ? AND `domain` = ?"
 
 	tDomain := senrenrpc.Domain(req.Contest.Domain)
-	tDomain.Convert()
+	tDomain.ConvertDomain()
 	req.Contest.Domain = string(tDomain)
 
 	if req.Contest.Uid == "" || req.Contest.Uid == noUID {

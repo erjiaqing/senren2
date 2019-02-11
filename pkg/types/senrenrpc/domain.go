@@ -15,24 +15,24 @@ type GetDomainsRequest GetDomainObjectsRequest
 
 type GetDomainsResponse struct {
 	SuccessError
-	Domain []*base.DomainInfo `json:"domains"`
+	Domains []*base.DomainInfo `json:"domains"`
 }
 
 type CreateDomainRequest struct {
 	Session
-	DomainUser *base.DomainInfo `json:"domain"`
+	Domain *base.DomainInfo `json:"domain"`
 }
 
 type CreateDomainResponse CreateDomainObjectResponse
 
-type GetDomainInviteReuqest GetDomainObjectRequest
+type GetDomainInviteRequest GetDomainObjectRequest
 
 type GetDomainInviteResponse struct {
 	SuccessError
 	DomainInvite *base.DomainInvite `json:"domain_invite"`
 }
 
-type GetDomainInvitesReuqest GetDomainObjectsRequest
+type GetDomainInvitesRequest GetDomainObjectsRequest
 
 type GetDomainInvitesResponse struct {
 	SuccessError
@@ -60,4 +60,20 @@ type UpdateDomainUserRequest struct {
 	UserUID string `json:"user_uid"`
 	Status  string `json:"status"`
 	Role    string `json:"role"`
+}
+
+type UpdateDomainUserResponse SuccessErrorOnly
+
+type GetDomainUserRequest GetDomainObjectRequest
+
+type GetDomainUserResponse struct {
+	SuccessError
+	User *base.User `json:"user"`
+}
+
+type GetDomainUsersRequest GetDomainObjectsRequest
+
+type GetDomainUsersResponse struct {
+	SuccessError
+	Users []*base.User `json:"users"`
 }

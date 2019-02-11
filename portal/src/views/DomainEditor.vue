@@ -2,14 +2,14 @@
   <el-row>
     <el-col :span="24">
       <div class="grid-content problem-title">
-        <span v-if="problem">
+        <span v-if="domain">
           <el-input
-            v-model="problem.title"
-            placeholder="试题标题"
+            v-model="domain.title"
+            placeholder="小组标题"
           ></el-input>
         </span>
         <span v-else-if="loading">Loading...</span>
-        <span v-else-if="error">「试题加载失败」</span>
+        <span v-else-if="error">「小组加载失败」</span>
       </div>
     </el-col>
     <el-col :span="24">
@@ -17,20 +17,19 @@
         <el-button-group>
           <el-button
             icon="el-icon-upload2"
-            @click="saveProblem"
-          >保存试题</el-button>
+            @click="saveDomain"
+          >保存更改</el-button>
           <el-button
             icon="el-icon-download"
-            @click="loadProblem"
-          >恢复试题</el-button>
-          <el-button icon="el-icon-share">克隆试题</el-button>
+            @click="loadDomain"
+          >撤销更改</el-button>
         </el-button-group>
       </div>
     </el-col>
     <el-col :span="24">
       <div
         class="grid-content problem-content"
-        v-if="problem"
+        v-if="domain"
       >
         <div id="baseinfo_container">
           <el-form
@@ -40,40 +39,34 @@
           >
             <el-form-item
               class="submission_metainfo_item"
-              label="公开时间"
-            >
-              <el-date-picker
-                v-model="problem.release"
-                type="datetime"
-                placeholder="选择日期时间"
-                align="right"
-                :picker-options="releaseTimePickerOptions"
-              >
-              </el-date-picker>
-            </el-form-item>
-            <el-form-item
-              class="submission_metainfo_item"
-              label="试题别名"
+              label="小组别名"
             >
               <el-input
-                v-model="problem.alias"
+                v-model="domain.alias"
                 placeholder=""
               ></el-input>
+            </el-form-item>
+            <el-form-item label="访问权限">
+              <el-radio-group v-model="domain.is_public">
+                <el-radio label="PUBLIC">公开</el-radio>
+                <el-radio label="PROTECTED">保护</el-radio>
+                <el-radio label="PRIVATE">私有</el-radio>
+              </el-radio-group>
             </el-form-item>
           </el-form>
         </div>
         <quill-editor
-          v-if="problem"
-          v-model="problem.description"
+          v-if="domain"
+          v-model="domain.description"
           ref="Editor"
         >
         </quill-editor>
       </div>
       <div v-if="error">
         <el-alert
-          title="试题加载失败"
+          title="小组加载失败"
           type="error"
-          description="可能的原因：服务器故障、网络问题或请求的试题不存在"
+          description="可能的原因：服务器故障、网络问题或请求的小组不存在"
           show-icon
         >
         </el-alert>
@@ -92,71 +85,47 @@ import { quillEditor } from "vue-quill-editor";
 export default {
   data() {
     return {
-      problem: null,
+      domain: null,
       loading: false,
-      error: false,
-      releaseTimePickerOptions: {
-        shortcuts: [
-          {
-            text: "一直可见",
-            onClick(picker) {
-              picker.$emit("pick", new Date(0));
-            }
-          },
-          {
-            text: "不可见",
-            onClick(picker) {
-              picker.$emit("pick", new Date(2147483647000));
-            }
-          }
-        ]
-      }
+      error: false
     };
   },
   components: {
     quillEditor
   },
   methods: {
-    loadProblem: async function() {
+    loadDomain: async function() {
       this.loading = true;
-      let res = await RPC.doRPC("getProblem", {
-        domain: this.$route.params.domain,
-        uid: this.$route.params.uid
+      let res = await RPC.doRPC("getDomain", {
+        domain: this.$route.params.domain
       });
       this.loading = false;
       if (res == null) {
         this.error = true;
         return;
       }
-      res.problem.release = new Date(res.problem.release);
-      this.problem = res.problem;
+      this.domain = res.domain;
     },
-    saveProblem: async function() {
+    saveDomain: async function() {
       this.loading = true;
-      this.problem.release = new Date(this.problem.release);
-      if (this.problem.domain == "") {
-        this.problem.domain = this.$route.params.domain;
-      }
-      let res = await RPC.doRPC("createProblem", {
-        problem: this.problem
+      let res = await RPC.doRPC("createDomain", {
+        domain: this.domain
       });
       this.loading = false;
       if (res == null) {
         this.error = true;
         return;
       }
-      if (this.problem.uid == "" || this.problem.uid == "0000000000000000") {
-        this.problem.uid = res.uid;
+      if (this.domain.uid == "" || this.domain.uid == "aaaaaaaaaaaaaaaa") {
+        this.domain.uid = res.uid;
         this.$message({
-          message: "试题已创建",
+          message: "小组已创建",
           type: "success"
         });
-        this.$router.push(
-          `/${this.$route.params.domain}/problem/${res.uid}/edit`
-        );
+        this.$router.push(`/${res.uid}/edit`);
       } else {
         this.$message({
-          message: "试题已保存",
+          message: "小组已保存",
           type: "success"
         });
       }
@@ -164,11 +133,11 @@ export default {
   },
   watch: {
     $route: function() {
-      this.loadProblem();
+      this.loadDomain();
     }
   },
   created() {
-    this.loadProblem();
+    this.loadDomain();
   }
 };
 </script>

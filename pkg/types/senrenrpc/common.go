@@ -16,10 +16,12 @@ type SuccessErrorOnly struct {
 type Domain string
 
 type HasDomain interface {
-	Convert()
+	ConvertDomain()
+	GetDomain() string
+	SetDomain(string)
 }
 
-func (d *Domain) Convert() {
+func (d *Domain) ConvertDomain() {
 	if *d == "" {
 		*d = "0000000000000000"
 		return
@@ -34,4 +36,13 @@ func (d *Domain) Convert() {
 		panic(err)
 		// not exist domain id
 	}
+}
+
+func (d *Domain) GetDomain() string {
+	return string(*d)
+}
+
+func (d *Domain) SetDomain(s string) {
+	*d = Domain(s)
+	d.ConvertDomain()
 }

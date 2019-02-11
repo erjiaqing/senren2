@@ -45,3 +45,14 @@ type CheckInviteResponse struct {
 }
 
 type ConfirmInviteResponse SuccessErrorOnly
+
+type WhoAmIRequest struct {
+	Session
+	Domain
+}
+
+type WhoAmIResponse struct {
+	SuccessError
+	User  *base.User `json:"user"`
+	GUser *base.User `json:"user_global"`
+}

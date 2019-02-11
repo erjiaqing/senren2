@@ -184,28 +184,6 @@ export default {
       });
       this.error = false;
 
-// type Submission struct {
-// 	Uid            string    `json:"uid"`
-// 	UserUid        string    `json:"user_uid"`
-// 	ProblemUid     string    `json:"problem_uid"`
-// 	ContestUid     string    `json:"contest_uid"`
-// 	Domain         string    `json:"domain"`
-// 	Language       string    `json:"language"`
-// 	Code           string    `json:"code"`
-// 	FileName       string    `json:"file_name"`
-// 	ExecuteTime    int64     `json:"execute_time"`
-// 	ExecuteMemory  int64     `json:"execute_memory"`
-// 	Status         string    `json:"status"`
-// 	Verdict        string    `json:"verdict"`
-// 	Testcase       int       `json:"test_case"`
-// 	Score          int       `json:"score"`
-// 	JudgerResponse string    `json:"judger_response"`
-// 	CEMessage      string    `json:"ce_message"`
-// 	SubmitTime     time.Time `json:"submit_time"`
-// 	JudgeTime      time.Time `json:"judge_time"`
-// }
-
-
       let res = await RPC.doRPC('createSubmission', {
         submission: {
           problem_uid: this.problem.uid,
@@ -215,9 +193,11 @@ export default {
           code: this.code,
         }
       })
+
       if (res == null || res.success != true) {
         this.error = true
       }
+      
       console.log(res);
       loading.close();
       this.$router.push(

@@ -18,7 +18,7 @@ func SignSession(uid string) string {
 
 func CheckSession(sid string) string {
 	parts := strings.Split(sid, ":")
-	if len(parts) != 2 {
+	if len(parts) != 3 {
 		return ""
 	}
 	var sigtime int64

@@ -10,4 +10,12 @@ export const ConstString = {
     "JUDGE_TAG_SE": ['info', 'System Error'],
     "JUDGE_TAG_ILE": ['error', 'Ildeness Limit Exceeded'],
     "JUDGE_TAG_NO": ['error', 'Rejected'],
+
+    "ROLE_TAG_NONE": ['info', '观察员'],
+    "ROLE_TAG_USER": ['info', '普通用户'],
+    "ROLE_TAG_ADMIN": ['success', '管理员'],
+    "ROLE_TAG_ROOT": ['error', '创建者'],
+    "ROLE_TAG_VIP_USER": ['warning', '教师'],
+    "ROLE_TAG_VIP_ADMIN": ['success', '管理员/教师'],
+    "ROLE_TAG_VIP_ROOT": ['error', '创建者/教师'],
 }
