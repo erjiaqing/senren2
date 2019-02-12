@@ -22,7 +22,7 @@
             <el-col
               :xs="8"
               :sm="8"
-              :md="10"
+              :md="6"
               style="float:right"
             >
               <div
@@ -47,11 +47,12 @@
                     <el-dropdown-item
                       v-if="guser"
                       disabled
-                    >当前用户 {{ guser.nickname }} @ WOJ (
+                    >WOJ用户 {{ guser.nickname }}
                       <el-tag
                         size="mini"
                         :type="tags['ROLE_TAG_' + guser.role][0]"
-                      >{{ tags['ROLE_TAG_' + guser.role][1] }}</el-tag>)</el-dropdown-item>
+                      >{{ tags['ROLE_TAG_' + guser.role][1] }}</el-tag>
+                    </el-dropdown-item>
                     <el-dropdown-item v-if="user && user.role == 'NONE'">加入 {{ domain.title }}</el-dropdown-item>
                     <el-dropdown-item
                       v-if="user && user.role != 'NONE'"
@@ -63,14 +64,28 @@
                     >登出</el-dropdown-item>
                     <el-dropdown-item
                       v-if="user.role == 'ROOT' || user.role == 'ADMIN' || user.role == 'VIP_ROOT' || user.role == 'VIP_ADMIN'"
-                      command="editDomain"
                       divided
-                    >编辑小组
+                      disabled
+                    >
                       <el-tag
                         size="mini"
                         :type="tags['ROLE_TAG_' + user.role][0]"
                       >管理员</el-tag>
-
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-if="user.role == 'ROOT' || user.role == 'ADMIN' || user.role == 'VIP_ROOT' || user.role == 'VIP_ADMIN'"
+                      command="editDomain"
+                    >编辑小组信息
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-if="user.role == 'ROOT' || user.role == 'ADMIN' || user.role == 'VIP_ROOT' || user.role == 'VIP_ADMIN'"
+                      command="editInvite"
+                    >管理邀请码
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      v-if="user.role == 'ROOT' || user.role == 'ADMIN' || user.role == 'VIP_ROOT' || user.role == 'VIP_ADMIN'"
+                      command="editInvite"
+                    >管理小组成员
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </el-dropdown>
@@ -80,7 +95,7 @@
                 style="line-height:60px;text-align:right"
                 v-else
               >
-                <el-button @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/login')">Login / Register</el-button>
+                <el-button @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/login')">登陆 / 注册 </el-button>
               </div>
               <!-- TODO 登陆&注册&权限管理 -->
             </el-col>
@@ -88,7 +103,7 @@
             <el-col
               :xs="24"
               :sm="24"
-              :md="8"
+              :md="12"
             >
               <div
                 class="grid-content"
@@ -108,9 +123,28 @@
                 >比赛</el-button>
                 <el-button
                   type="text"
+                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000'"
+                  @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/homeworks')"
+                >作业</el-button>
+                <el-button
+                  type="text"
+                  v-if="$route.params.domain == 'woj' || $route.params.domain == '0000000000000000'"
                   @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/domains')"
                 >小组</el-button>
-                <el-button type="text" v-if="guser && user && user.role == 'NONE'">加入 {{ domain.title }}</el-button>
+                <el-button
+                  type="text"
+                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000'"
+                  @click="$router.push('/woj')"
+                >返回WOJ</el-button>
+                <el-button
+                  type="text"
+                  v-if="guser && user && user.role == 'NONE'"
+                >加入 {{ domain.title }}</el-button>
+                <el-button
+                  type="text"
+                  v-if="!(guser && user && user.role == 'NONE')"
+                  disabled
+                >已是小组成员</el-button>
               </div>
             </el-col>
           </el-row>
@@ -159,6 +193,7 @@ export default {
       }
       this.user = res.user;
       this.guser = res.user_global;
+      this.$store.commit("setUser", res.user);
     },
     reloadDomain: async function() {
       let res = await RPC.doRPC("getDomain", {

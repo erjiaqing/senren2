@@ -9,6 +9,9 @@ import ContestSingle from './views/ContestSingle.vue'
 import ContestList from './views/ContestList.vue'
 import SubmissionList from './views/SubmissionList.vue'
 import SubmissionSingle from './views/SubmissionSingle.vue'
+import HomeworkEditor from './views/HomeworkEditor.vue'
+import HomeworkList from './views/HomeworkList.vue'
+import HomeworkSingle from './views/HomeworkSingle.vue'
 import DomainList from './views/DomainList.vue'
 import DomainEdit from './views/DomainEditor.vue'
 import DomainIndex from './views/DomainIndex.vue'
@@ -23,7 +26,12 @@ export default new Router({
     {
       path: '/',
       name: 'home',
-      component: Home
+      component: Home,
+      redirect: to => {
+        return "/woj"
+        // 方法接收 目标路由 作为参数
+        // return 重定向的 字符串路径/路径对象
+      }
     },
     {
       path: '/:domain',
@@ -79,6 +87,21 @@ export default new Router({
           path: 'submission/:uid',
           name: 'submission_single',
           component: SubmissionSingle,
+        },
+        {
+          path: 'homeworks',
+          name: 'homework_list',
+          component: HomeworkList,
+        },
+        {
+          path: 'homework/:uid',
+          name: 'homework_single',
+          component: HomeworkSingle,
+        },
+        {
+          path: 'homework/:uid/edit',
+          name: 'homework_editor',
+          component: HomeworkEditor,
         },
         {
           path: 'login',

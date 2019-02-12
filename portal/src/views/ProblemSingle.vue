@@ -14,14 +14,20 @@
             icon="el-icon-edit-outline"
             @click="codeEditor = !codeEditor"
           >{{ codeEditor ? '收起编辑器' : '代码编辑器' }}</el-button>
-          <el-button icon="el-icon-more"
-          @click="$router.push('/' + $route.params.domain + '/submissions/' + problem.uid)">评测结果</el-button>
+          <el-button
+            icon="el-icon-more"
+            @click="$router.push('/' + $route.params.domain + '/submissions/' + problem.uid)"
+          >评测结果</el-button>
           <el-button icon="el-icon-tickets">讨论区</el-button>
           <el-button
             icon="el-icon-edit"
             @click="gotoEditor"
+            v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
           >编辑试题</el-button>
-          <el-button icon="el-icon-share">克隆试题</el-button>
+          <el-button
+            icon="el-icon-share"
+            v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
+          >克隆试题</el-button>
         </el-button-group>
       </div>
     </el-col>
@@ -83,6 +89,7 @@
 
 <script>
 import { RPC } from "../rpc.js";
+import { mapState } from "vuex";
 
 export default {
   data() {
@@ -156,6 +163,7 @@ export default {
   components: {
     editor: require("vue2-ace-editor")
   },
+  computed: mapState(["user"]),
   methods: {
     loadProblem: async function() {
       this.loading = true;
@@ -184,25 +192,23 @@ export default {
       });
       this.error = false;
 
-      let res = await RPC.doRPC('createSubmission', {
+      let res = await RPC.doRPC("createSubmission", {
         submission: {
           problem_uid: this.problem.uid,
           domain: this.problem.domain,
-          contest_uid: '0000000000000000',
+          contest_uid: "0000000000000000",
           language: this.selectedLanguage,
-          code: this.code,
+          code: this.code
         }
-      })
+      });
 
       if (res == null || res.success != true) {
-        this.error = true
+        this.error = true;
       }
-      
+
       console.log(res);
       loading.close();
-      this.$router.push(
-        `/${this.$route.params.domain}/submission/${res.uid}`
-      );
+      this.$router.push(`/${this.$route.params.domain}/submission/${res.uid}`);
     },
     langChange: function(newLang) {
       console.log(`Switched to ${newLang}`);
@@ -230,7 +236,7 @@ export default {
     }
   },
   watch: {
-    '$route': function() {
+    $route: function() {
       this.loadProblem();
     }
   },
