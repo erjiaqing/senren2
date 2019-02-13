@@ -11,6 +11,7 @@ import SubmissionList from './views/SubmissionList.vue'
 import SubmissionSingle from './views/SubmissionSingle.vue'
 import HomeworkEditor from './views/HomeworkEditor.vue'
 import HomeworkList from './views/HomeworkList.vue'
+import HomeworkSubmissionList from './views/HomeworkSubmissionList.vue'
 import HomeworkSingle from './views/HomeworkSingle.vue'
 import DomainList from './views/DomainList.vue'
 import DomainEdit from './views/DomainEditor.vue'
@@ -102,6 +103,11 @@ export default new Router({
           path: 'homework/:uid/edit',
           name: 'homework_editor',
           component: HomeworkEditor,
+        },
+        {
+          path: 'homework/:uid/submissions',
+          name: 'homework_editor',
+          component: HomeworkSubmissionList,
         },
         {
           path: 'login',

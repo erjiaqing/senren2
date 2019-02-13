@@ -15,15 +15,9 @@
         <el-button-group>
           <el-button
             icon="el-icon-more"
-            @click="$router.push('/' + $route.params.domain + '/homework/' + homework.uid + '/edit')"
-            v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
-          >编辑作业</el-button>
-          <el-button
-            icon="el-icon-more"
             @click="$router.push('/' + $route.params.domain + '/homework/' + homework.uid + '/submissions')"
             v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
-          >提交结果</el-button>
-          <el-button icon="el-icon-tickets">讨论区</el-button>
+          >批量下载</el-button>
         </el-button-group>
       </div>
     </el-col>
@@ -51,91 +45,29 @@
           <i class="el-icon-info"></i>
           作业提交截止于 {{ homework.end_time | moment("from", "now") }} ({{ homework.end_time | moment('llll')}})</div>
         <div>
-          <h3>作业描述</h3>
-        </div>
-        <div v-html="homework.description"></div>
-        <div>
-          <h3>提交项</h3>
-          <div id="submit_form">
-            <el-row>
-              <el-col :span="12">
-                <el-select
-                  v-model="extData.name"
-                  placeholder="选择需要提交的作业"
-                >
-                  <el-option
-                    v-for="item in attachment_list"
-                    :key="item.name"
-                    :label="item.name"
-                    :value="item.name"
-                  >
-                  </el-option>
-                </el-select>
-                <el-button
-                  type="primary"
-                  @click="generatePhoneUploadQR"
-                >手机上传</el-button>
-              </el-col>
-              <el-col :span="12">
-                <el-upload
-                  class="upload-demo"
-                  action="/rpc/attachments/uploadHomework"
-                  :limit="1"
-                  :headers="upload_head"
-                  :data="extData"
-                  :file-list="uplfile"
-                  :on-success="onFileUploadSuccess"
-                >
-                  <el-button
-                    type="primary"
-                    :disabled="uplfile && uplfile.length > 0"
-                  >点击上传</el-button>
-                </el-upload>
-              </el-col>
-            </el-row>
-          </div>
+          <h3>提交结果</h3>
           <el-table
-            :data="attachment_list"
+            :data="submission"
+            border
             style="width: 100%"
-            @row-click="handleHomeworkClick"
           >
-            <el-table-column label="附件名称">
-              <template slot-scope="scope">
-                <span>{{ scope.row.name }}</span>
-              </template>
+            <el-table-column
+              prop="__nick"
+              label="用户"
+            >
             </el-table-column>
-            <el-table-column label="文件类型">
-              <template slot-scope="scope">
-                <code>{{ scope.row.file }}</code>
-              </template>
-            </el-table-column>
-            <el-table-column label="附件描述">
-              <template slot-scope="scope">
-                <span>{{ scope.row.desc }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column label="提交结果">
+            <el-table-column
+              v-for="(o) in attachment_list"
+              :key="o.name"
+              :label="o.name"
+            >
               <template slot-scope="scope">
                 <el-tag
                   size="small"
                   type="success"
-                  v-if="submission_result[scope.row.name]"
+                  v-if="scope.row[o.name]"
                 >
-                  <i class="el-icon-success"></i> {{ submission_result[scope.row.name].fullname }} , {{ submission_result[scope.row.name].size }} 字节
-                </el-tag>
-                <el-tag
-                  size="small"
-                  v-else-if="isOverdue == -1"
-                  type="info"
-                >
-                  <i class="el-icon-info"></i> 未开始
-                </el-tag>
-                <el-tag
-                  size="small"
-                  v-else-if="isOverdue == 0"
-                  type="warning"
-                >
-                  <i class="el-icon-warning"></i> 待提交
+                  <i class="el-icon-success"></i> {{ scope.row[o.name].fullname }}
                 </el-tag>
                 <el-tag
                   size="small"
@@ -144,6 +76,13 @@
                 >
                   <i class="el-icon-error"></i> 未提交
                 </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column
+              label="操作"
+            >
+              <template slot-scope="scope">
+            <router-link :to="'/' + $route.params.domain + '/homework/' + $route.params.uid + '/show/' + scope.row.__uid">批改</router-link>
               </template>
             </el-table-column>
           </el-table>
@@ -166,13 +105,8 @@ export default {
   data() {
     return {
       homework: null,
+      submission: [],
       attachment_list: [],
-      uplfile: [],
-      submission_result: {},
-      upload_head: {},
-      extData: {
-        name: ""
-      },
       isOverdue: 0,
       loading: false,
       error: false
@@ -183,46 +117,11 @@ export default {
     QrcodeVue
   },
   methods: {
-    generatePhoneUploadQR: function() {
-      let data =
-        window.localStorage.getItem("sid") +
-        "$" +
-        this.homework.domain +
-        ";" +
-        this.homework.uid +
-        ";" +
-        this.extData.name;
-      let qr = location.origin + "/uploadHomework/" + encodeURI(data);
-      const h = this.$createElement;
-      this.$msgbox({
-        title: "扫描下方二维码使用手机上传作业",
-        message: h("p", {style: "text-align:center"}, [
-          h("qrcode-vue", { props: { value: qr, size: 256, level: "H" } }, ""),
-          h("p", null, "上传完成后，请刷新该页面")
-        ])
-      });
-    },
-    onFileUploadSuccess: function(resp, file, fileList) {
-      console.log(resp);
-      if (resp.success) {
-        this.$message({
-          message: "作业上传成功",
-          type: "success"
-        });
-      } else {
-        this.$message({
-          message: `作业上传失败:<br><strong>${resp.error}</strong>`,
-          dangerouslyUseHTMLString: true,
-          type: "error"
-        });
-      }
-      this.loadSubmission();
-    },
     loadSubmission: async function() {
       this.loading = true;
-      let res = await RPC.doRPC("getHomeworkSubmission", {
+      let res = await RPC.doRPC("getHomeworkSubmissions", {
         domain: this.$route.params.domain,
-        uid: this.$route.params.uid
+        filter: this.$route.params.uid
       });
       this.loading = false;
       if (res == null) {
@@ -232,24 +131,37 @@ export default {
       if (res.success !== true) {
         return;
       }
-      let sublst = res.homeworksubmission.attachments.split(";");
-      let subres = {};
-      sublst.forEach(element => {
-        let l2 = element.split(",");
-        if (l2.length < 5) {
+
+      let sublist = [];
+      res.homeworksubmissions.forEach(element => {
+        let fullattachment = element.attachments.split("!!");
+        if (fullattachment.length != 2) {
           return;
         }
-        subres[l2[0]] = {
-          name: l2[0],
-          uid: l2[2],
-          origname: l2[1],
-          size: Number(l2[3]),
-          fullname: l2[0] + l2[4],
-          extname: l2[4]
-        };
+        let nick = fullattachment[0];
+        let sublst = fullattachment[1].split(";");
+
+        let subres = {};
+        sublst.forEach(element => {
+          let l2 = element.split(",");
+          if (l2.length < 5) {
+            return;
+          }
+          subres[l2[0]] = {
+            name: l2[0],
+            uid: l2[2],
+            origname: l2[1],
+            size: Number(l2[3]),
+            fullname: l2[0] + l2[4],
+            extname: l2[4]
+          };
+        });
+        subres["__nick"] = nick;
+        subres["__uid"] = element.uid;
+        sublist.push(subres);
       });
-      this.submission_result = subres;
-      console.log(res);
+      console.log(sublist);
+      this.submission = sublist;
     },
     loadHomework: async function() {
       this.loading = true;

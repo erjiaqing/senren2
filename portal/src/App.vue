@@ -142,7 +142,7 @@
                 >加入 {{ domain.title }}</el-button>
                 <el-button
                   type="text"
-                  v-if="!(guser && user && user.role == 'NONE')"
+                  v-if="guser && user && user.role != 'NONE'"
                   disabled
                 >已是小组成员</el-button>
               </div>
@@ -157,7 +157,7 @@
         </div>
       </el-main>
 
-      <el-footer>&copy; 2018 - {{(new Date()).getFullYear()}} 武汉大学 ACM 集训队</el-footer>
+      <el-footer id="page-footer">&copy; 2018 - {{(new Date()).getFullYear()}} 武汉大学 ACM 集训队</el-footer>
     </el-container>
   </div>
 </template>
@@ -260,8 +260,22 @@ export default {
 </script>
 
 <style>
+html {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  min-height: 100%;
+  padding: 0;
+  position: relative;
+}
+
+#page-footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 100px;
 }
 
 #app {
@@ -287,6 +301,10 @@ body {
   top: 0;
   left: 0;
   width: 100%;
+}
+
+#main-container-parent {
+  padding-bottom: 112px;
 }
 
 .scolled {

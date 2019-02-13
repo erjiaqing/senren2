@@ -43,3 +43,7 @@ type GetHomeworkSubmissionsResponse struct {
 	SuccessError
 	HomeworkSubmissions []*base.HomeworkSubmission `json:"homeworksubmissions"`
 }
+
+type PackHomeworkSubmissionsRequest GetDomainObjectRequest
+
+type PackHomeworkSubmissionsResponse CreateDomainObjectResponse

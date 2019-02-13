@@ -40,7 +40,7 @@ func checkLogin(ctx context.Context, req senrenrpc.HasSession, domain string, st
 	}
 
 	if err := row2.Scan(&guid, &guname, &grole); err != nil {
-		return
+		grole = "NONE"
 	}
 
 	state["role"] = role

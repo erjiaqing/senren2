@@ -19,7 +19,37 @@ func init() {
 	r := router.R.PathPrefix("/class").Subrouter()
 	r.HandleFunc("/{method}", endpointsRouter)
 
+	r2 := router.R.PathPrefix("/attachments").Subrouter()
+	r2.HandleFunc("/uploadHomework", uploadHomework)
+
 	logrus.Info("Init routes of class")
+}
+
+func uploadHomework(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	defer func() {
+		cancel()
+		if err := recover(); err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(fmt.Sprint(err)))
+		}
+	}()
+
+	req := &senrenrpc.CreateHomeworkSubmissionRequest{}
+	res := &uploadHomeworkResponse{}
+
+	req.Session.Sid = r.Header.Get("UPLOAD_SESSION")
+	req.HomeworkSubmission.Domain = r.Header.Get("UPLOAD_DOMAIN")
+
+	doHomeworkUpload(ctx, r, req, res)
+	w.Header().Set("Content-Type", "application/json")
+	wbody, err := json.Marshal(res)
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+	w.Write(wbody)
 }
 
 // TODO context
@@ -65,10 +95,10 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "getHomeworks":
 		req = &senrenrpc.GetHomeworksRequest{}
 		res = &senrenrpc.GetHomeworksResponse{}
-	case "getHomeorkSubmission":
+	case "getHomeworkSubmission":
 		req = &senrenrpc.GetHomeworkSubmissionRequest{}
 		res = &senrenrpc.GetHomeworkSubmissionResponse{}
-	case "getHomeorkSubmissions":
+	case "getHomeworkSubmissions":
 		req = &senrenrpc.GetHomeworkSubmissionsRequest{}
 		res = &senrenrpc.GetHomeworkSubmissionsResponse{}
 	case "createHomework":
@@ -172,10 +202,10 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getHomework(ctx, req.(*senrenrpc.GetHomeworkRequest), state, res.(*senrenrpc.GetHomeworkResponse))
 	case "getHomeworks":
 		getHomeworks(ctx, req.(*senrenrpc.GetHomeworksRequest), state, res.(*senrenrpc.GetHomeworksResponse))
-	case "getHomeorkSubmission":
-		getHomeorkSubmission(ctx, req.(*senrenrpc.GetHomeworkSubmissionRequest), state, res.(*senrenrpc.GetHomeworkSubmissionResponse))
-	case "getHomeorkSubmissions":
-		getHomeorkSubmissions(ctx, req.(*senrenrpc.GetHomeworkSubmissionsRequest), state, res.(*senrenrpc.GetHomeworkSubmissionsResponse))
+	case "getHomeworkSubmission":
+		getHomeworkSubmission(ctx, req.(*senrenrpc.GetHomeworkSubmissionRequest), state, res.(*senrenrpc.GetHomeworkSubmissionResponse))
+	case "getHomeworkSubmissions":
+		getHomeworkSubmissions(ctx, req.(*senrenrpc.GetHomeworkSubmissionsRequest), state, res.(*senrenrpc.GetHomeworkSubmissionsResponse))
 	case "createHomework":
 		createHomework(ctx, req.(*senrenrpc.CreateHomeworkRequest), state, res.(*senrenrpc.CreateHomeworkResponse))
 	case "createHomeworkSubmission":
