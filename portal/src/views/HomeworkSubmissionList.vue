@@ -15,7 +15,7 @@
         <el-button-group>
           <el-button
             icon="el-icon-more"
-            @click="$router.push('/' + $route.params.domain + '/homework/' + homework.uid + '/submissions')"
+            @click="packHomeworkSubmissions"
             v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
           >批量下载</el-button>
         </el-button-group>
@@ -78,11 +78,9 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column
-              label="操作"
-            >
+            <el-table-column label="操作">
               <template slot-scope="scope">
-            <router-link :to="'/' + $route.params.domain + '/homework/' + $route.params.uid + '/show/' + scope.row.__uid">批改</router-link>
+                <router-link :to="'/' + $route.params.domain + '/homework/' + $route.params.uid + '/show/' + scope.row.__uid">批改</router-link>
               </template>
             </el-table-column>
           </el-table>
@@ -117,6 +115,48 @@ export default {
     QrcodeVue
   },
   methods: {
+    queryTaskResult: async function(uid) {
+      let res = await RPC.doRPC("getTask", {
+        domain: this.$route.params.domain,
+        uid: uid
+      });
+
+      if (res && res.success && res.task.state == "SUCCESS") {
+        const h = this.$createElement;
+        let qr = location.origin + res.task.downloadurl;
+        this.$msgbox({
+          title: "作业打包完成",
+          message: h("p", { style: "text-align:center" }, [
+            h("p", null, [
+              h("a", { attrs: { href: qr }, style: "font-size:24px" }, "单击这里下载")
+            ]),
+            h("p", null, "链接24小时内有效")
+          ])
+        });
+      } else if (res && res.success) {
+        setTimeout(() => {
+          this.queryTaskResult(uid);
+        }, 1000);
+      }
+    },
+    packHomeworkSubmissions: async function() {
+      let res = await RPC.doRPC("packHomeworkSubmissions", {
+        domain: this.$route.params.domain,
+        uid: this.$route.params.uid
+      });
+      if (res && res.success) {
+        this.queryTaskResult(res.uid);
+        this.$message({
+          message: "打包请求已排队",
+          type: "success"
+        });
+      } else {
+        this.$message({
+          message: "打包请求失败",
+          type: "danger"
+        });
+      }
+    },
     loadSubmission: async function() {
       this.loading = true;
       let res = await RPC.doRPC("getHomeworkSubmissions", {

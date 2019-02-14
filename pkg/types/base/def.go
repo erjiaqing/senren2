@@ -49,6 +49,7 @@ type HomeworkSubmission struct {
 	UserUid     string    `json:"user_uid"`
 	HomeworkUid string    `json:"homework_uid"`
 	Attachments string    `json:"attachments"`
+	Nick        string    `json:"nick"`
 	CreateTime  time.Time `json:"create_time"`
 }
 
@@ -61,12 +62,14 @@ type HomeworkArchiveDescriptor struct {
 
 type HomeworkArchiveTask struct {
 	ServerTask
-	OutputFileName string                     `json:"output_filename"`
-	Desc           *HomeworkArchiveDescriptor `json:"desc"`
+	Desc *HomeworkArchiveDescriptor `json:"desc"`
 }
 
 type ServerTask struct {
-	Type string `json:"type"`
+	Type           string `json:"type"`
+	State          string `json:"state,omitempty"`
+	DownloadURL    string `json:"downloadurl,omitempty"`
+	OutputFileName string `json:"output_filename"`
 }
 
 type Contest struct {

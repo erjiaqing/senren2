@@ -138,11 +138,11 @@
                 >返回WOJ</el-button>
                 <el-button
                   type="text"
-                  v-if="guser && user && user.role == 'NONE'"
+                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000' && guser && user && user.role == 'NONE'"
                 >加入 {{ domain.title }}</el-button>
                 <el-button
                   type="text"
-                  v-if="guser && user && user.role != 'NONE'"
+                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000' && guser && user && user.role != 'NONE'"
                   disabled
                 >已是小组成员</el-button>
               </div>

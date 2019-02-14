@@ -21,6 +21,7 @@ func init() {
 
 	r2 := router.R.PathPrefix("/attachments").Subrouter()
 	r2.HandleFunc("/uploadHomework", uploadHomework)
+	r2.HandleFunc("/taskOutput", taskOutput)
 
 	logrus.Info("Init routes of class")
 }
@@ -107,6 +108,9 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "createHomeworkSubmission":
 		req = &senrenrpc.CreateHomeworkSubmissionRequest{}
 		res = &senrenrpc.CreateHomeworkSubmissionResponse{}
+	case "packHomeworkSubmissions":
+		req = &senrenrpc.PackHomeworkSubmissionsRequest{}
+		res = &senrenrpc.PackHomeworkSubmissionsResponse{}
 	case "getProblem":
 		req = &senrenrpc.GetProblemRequest{}
 		res = &senrenrpc.GetProblemResponse{}
@@ -155,6 +159,10 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "updateDomainUser":
 		req = &senrenrpc.UpdateDomainUserRequest{}
 		res = &senrenrpc.UpdateDomainUserResponse{}
+
+	case "getTask":
+		req = &senrenrpc.GetTaskRequest{}
+		res = &senrenrpc.GetTaskResponse{}
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
@@ -206,6 +214,8 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getHomeworkSubmission(ctx, req.(*senrenrpc.GetHomeworkSubmissionRequest), state, res.(*senrenrpc.GetHomeworkSubmissionResponse))
 	case "getHomeworkSubmissions":
 		getHomeworkSubmissions(ctx, req.(*senrenrpc.GetHomeworkSubmissionsRequest), state, res.(*senrenrpc.GetHomeworkSubmissionsResponse))
+	case "packHomeworkSubmissions":
+		packHomeworkSubmissions(ctx, req.(*senrenrpc.PackHomeworkSubmissionsRequest), state, res.(*senrenrpc.PackHomeworkSubmissionsResponse))
 	case "createHomework":
 		createHomework(ctx, req.(*senrenrpc.CreateHomeworkRequest), state, res.(*senrenrpc.CreateHomeworkResponse))
 	case "createHomeworkSubmission":
@@ -242,6 +252,9 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getDomainUsers(ctx, req.(*senrenrpc.GetDomainUsersRequest), state, res.(*senrenrpc.GetDomainUsersResponse))
 	case "updateDomainUser":
 		updateDomainUser(ctx, req.(*senrenrpc.UpdateDomainUserRequest), state, res.(*senrenrpc.UpdateDomainUserResponse))
+
+	case "getTask":
+		getTask(ctx, req.(*senrenrpc.GetTaskRequest), state, res.(*senrenrpc.GetTaskResponse))
 	}
 
 	wbody, err := json.Marshal(res)

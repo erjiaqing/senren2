@@ -74,7 +74,7 @@ func createDomain(ctx context.Context, req *senrenrpc.CreateDomainRequest, state
 	}
 
 	if doDomainCreate {
-		if _, err := db.DB.Exec("INSERT INTO user (uid, guid, username, nickname, domain, password, role, authsource) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", util.GenUid(), state["global_login"], "root", "root", req.Domain.Uid, "", "ROOT", "WOJ"); err != nil {
+		if _, err := db.DB.Exec("INSERT INTO user (uid, guid, username, nickname, domain, passwd, role, authsource) VALUES (?, ?, ?, ?, ?, ?, ?, ?)", util.GenUid(), state["global_login"], "root", "root", req.Domain.Uid, "", "ROOT", "WOJ"); err != nil {
 			panic(err.Error())
 		}
 	}

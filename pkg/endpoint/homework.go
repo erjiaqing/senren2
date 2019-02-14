@@ -3,12 +3,15 @@ package endpoint
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/erjiaqing/senren2/pkg/publicchan"
 
 	"github.com/erjiaqing/senren2/pkg/db"
 	"github.com/erjiaqing/senren2/pkg/types/base"
@@ -92,6 +95,74 @@ func getHomeworkSubmissions(ctx context.Context, req *senrenrpc.GetHomeworkSubmi
 
 func packHomeworkSubmissions(ctx context.Context, req *senrenrpc.PackHomeworkSubmissionsRequest, state map[string]string, res *senrenrpc.PackHomeworkSubmissionsResponse) {
 	// TODO
+	hw := &base.Homework{}
+	qry := db.DB.QueryRowContext(ctx, "SELECT uid, domain, title, content, attachments, start_time, end_time FROM homework WHERE domain = ? AND uid = ?", req.Domain, req.UID)
+	if err := qry.Scan(&hw.Uid, &hw.Domain, &hw.Title, &hw.Description, &hw.Attachments, &hw.StartTime, &hw.EndTime); err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+	packTask := &base.HomeworkArchiveTask{}
+	packTask.Type = "HomeworkArchiveTask"
+	packTask.OutputFileName = fmt.Sprintf("%s.zip", strings.Map(func(r rune) rune {
+		if r <= 32 {
+			return '_'
+		} else if r > 127 && r <= 255 {
+			return '_'
+		} else {
+			return r
+		}
+	}, hw.Title))
+
+	row, err := db.DB.QueryContext(ctx, "SELECT homework_submission.uid, homework_submission.domain, homework_submission.useruid, homework_submission.homework_uid, homework_submission.attachments, homework_submission.create_time, user.nickname FROM homework_submission LEFT JOIN user ON homework_submission.domain = user.domain AND homework_submission.useruid = user.guid WHERE homework_submission.homework_uid = ? AND homework_submission.domain = ?", req.UID, state["domain"])
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+	}
+	packTask.Desc = &base.HomeworkArchiveDescriptor{
+		Type:    "root",
+		Content: make([]*base.HomeworkArchiveDescriptor, 0),
+	}
+	for row.Next() {
+		t := &base.HomeworkSubmission{}
+		row.Scan(&t.Uid, &t.Domain, &t.UserUid, &t.HomeworkUid, &t.Attachments, &t.CreateTime, &t.Nick)
+		t2 := &base.HomeworkArchiveDescriptor{
+			Type:    "archive",
+			Name:    t.Nick,
+			Content: make([]*base.HomeworkArchiveDescriptor, 0),
+		}
+		submitted := strings.Split(t.Attachments, ";")
+		for _, v := range submitted {
+			if v == "" {
+				continue
+			}
+
+			v2 := strings.Split(v, ",")
+			if len(v2) < 5 {
+				continue
+			}
+
+			t2.Content = append(t2.Content, &base.HomeworkArchiveDescriptor{
+				Type:   "file",
+				Name:   v2[0] + v2[4],
+				Source: "upload/" + v2[2][13:] + "/" + v2[2][:13] + "/" + v2[0] + v2[4],
+			})
+			logrus.Infof("%s", "upload/"+v2[2][13:]+"/"+v2[2][:13]+"/"+v2[0]+v2[4])
+		}
+		packTask.Desc.Content = append(packTask.Desc.Content, t2)
+	}
+	res.UID = util.GenUid()
+
+	packTaskString, _ := json.Marshal(packTask)
+
+	if _, err := db.DB.ExecContext(ctx, "INSERT INTO `task` (uid, create_time, state, creator, `desc`) VALUES (?, ?, ?, ?, ?)", res.UID, time.Now(), "PENDING", state["guid"], string(packTaskString)); err != nil {
+		res.Success = false
+		res.Error = err.Error()
+	}
+
+	publicchan.ChanTask <- res.UID
+
+	res.Success = true
 }
 
 func createHomework(ctx context.Context, req *senrenrpc.CreateHomeworkRequest, state map[string]string, res *senrenrpc.CreateHomeworkResponse) {

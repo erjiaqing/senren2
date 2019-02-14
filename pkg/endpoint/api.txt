@@ -10,6 +10,7 @@ getHomeorkSubmission *senrenrpc.GetHomeworkSubmissionRequest *senrenrpc.GetHomew
 getHomeorkSubmissions *senrenrpc.GetHomeworkSubmissionsRequest *senrenrpc.GetHomeworkSubmissionsResponse
 createHomework *senrenrpc.CreateHomeworkRequest *senrenrpc.CreateHomeworkResponse
 createHomeworkSubmission *senrenrpc.CreateHomeworkSubmissionRequest *senrenrpc.CreateHomeworkSubmissionResponse
+packHomeworkSubmissions *senrenrpc.PackHomeworkSubmissionsRequest *senrenrpc.PackHomeworkSubmissionsResponse
 getProblem *senrenrpc.GetProblemRequest *senrenrpc.GetProblemResponse
 getProblems *senrenrpc.GetProblemsRequest *senrenrpc.GetProblemsResponse
 createProblem *senrenrpc.CreateProblemRequest *senrenrpc.CreateProblemResponse
