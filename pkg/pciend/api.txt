@@ -1,0 +1,7 @@
+getProblem *pcirpc.GetProblemRequest *pcirpc.GetProblemResponse
+createProblem *pcirpc.CreateProblemRequest *pcirpc.CreateProblemResponse
+createProblemEditSession *pcirpc.CreateProblemEditSessionRequest *pcirpc.CreateProblemEditSessionResponse
+closeProblemEditSession *pcirpc.CloseProblemEditSessionRequest *pcirpc.CloseProblemEditSessionResponse
+createProblemAccessKey *pcirpc.CreateProblemAccessKeyRequest *pcirpc.CreateProblemAccessKeyResponse
+createSubmissionTask *pcirpc.CreateSubmissionTaskRequest *pcirpc.CreateSubmissionTaskResponse
+createProblemTestTask *pcirpc.CreateProblemTestTaskRequest *pcirpc.CreateProblemTestTaskResponse
