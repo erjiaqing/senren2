@@ -5,6 +5,7 @@ import (
 	"os"
 
 	_ "github.com/erjiaqing/senren2/pkg/endpoint"
+	"github.com/erjiaqing/senren2/pkg/taskworker"
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,5 +14,6 @@ func main() {
 	if listenAddr == "" {
 		listenAddr = ":8080"
 	}
+	go taskworker.Work()
 	logrus.Fatal(http.ListenAndServe(listenAddr, nil))
 }

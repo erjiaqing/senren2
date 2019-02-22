@@ -2,6 +2,7 @@ package pciend
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
@@ -85,12 +86,18 @@ func createProblemEditSession(ctx context.Context, req *pcirpc.CreateProblemEdit
 	createEditSessionMutex.Lock()
 	defer createEditSessionMutex.Unlock()
 
-	tprobRow := pcidb.PCIDB.QueryRowContext(ctx, "SELECT remoteURL FROM problem WHERE uid = ?", state["PROB"])
-	probURL := ""
+	tprobRow := pcidb.PCIDB.QueryRowContext(ctx, "SELECT remoteURL, editSession FROM problem WHERE uid = ?", state["PROB"])
+	probURL, currSession := "", ""
 
-	if err := tprobRow.Scan(&probURL); err != nil {
+	if err := tprobRow.Scan(&probURL, &currSession); err != nil {
 		res.Success = false
 		res.Error = err.Error()
+		return
+	}
+
+	if currSession != "" && currSession != "-" {
+		res.Success = true
+		res.Uid = currSession
 		return
 	}
 
@@ -118,7 +125,14 @@ func createProblemEditSession(ctx context.Context, req *pcirpc.CreateProblemEdit
 		return
 	}
 
-	uid := string(dat)
+	uidDict := make(map[string]string)
+	if err := json.Unmarshal(dat, uidDict); err != nil {
+		res.Success = false
+		res.Error = "failed to clone"
+		return
+	}
+
+	uid := uidDict["text"]
 
 	if uid == "" {
 		res.Success = false

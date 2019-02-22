@@ -30,7 +30,7 @@ type GetPCITaskRequest struct {
 	// if problem access key is for problem 0, and task id is 0, then one unjudged task will be returned
 }
 
-type RequestPCITaskResponse struct {
+type GetPCITaskResponse struct {
 	SuccessError
 	Task *base.PCITaskItem `json:"task"`
 }

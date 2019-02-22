@@ -69,6 +69,12 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "createProblemTestTask":
 		req = &pcirpc.CreateProblemTestTaskRequest{}
 		res = &pcirpc.CreateProblemTestTaskResponse{}
+	case "getTask":
+		req = &pcirpc.GetPCITaskRequest{}
+		res = &pcirpc.GetPCITaskResponse{}
+	case "updateTask":
+		req = &pcirpc.UpdatePCITaskRequest{}
+		res = &pcirpc.UpdatePCITaskResponse{}
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
@@ -129,6 +135,10 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		createSubmissionTask(ctx, req.(*pcirpc.CreateSubmissionTaskRequest), state, res.(*pcirpc.CreateSubmissionTaskResponse))
 	case "createProblemTestTask":
 		createProblemTestTask(ctx, req.(*pcirpc.CreateProblemTestTaskRequest), state, res.(*pcirpc.CreateProblemTestTaskResponse))
+	case "getTask":
+		getTask(ctx, req.(*pcirpc.GetPCITaskRequest), state, res.(*pcirpc.GetPCITaskResponse))
+	case "updateTask":
+		updateTask(ctx, req.(*pcirpc.UpdatePCITaskRequest), state, res.(*pcirpc.UpdatePCITaskResponse))
 	}
 
 	wbody, err := json.Marshal(res)

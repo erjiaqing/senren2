@@ -5,3 +5,5 @@ closeProblemEditSession *pcirpc.CloseProblemEditSessionRequest *pcirpc.CloseProb
 createProblemAccessKey *pcirpc.CreateProblemAccessKeyRequest *pcirpc.CreateProblemAccessKeyResponse
 createSubmissionTask *pcirpc.CreateSubmissionTaskRequest *pcirpc.CreateSubmissionTaskResponse
 createProblemTestTask *pcirpc.CreateProblemTestTaskRequest *pcirpc.CreateProblemTestTaskResponse
+getTask *pcirpc.GetPCITaskRequest *pcirpc.GetPCITaskResponse
+updateTask *pcirpc.UpdatePCITaskRequest *pcirpc.UpdatePCITaskResponse
