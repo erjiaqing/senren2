@@ -18,6 +18,9 @@ var perms map[string]string
 func init() {
 	perms = make(map[string]string)
 
+	r2 := router.R.PathPrefix("/pci_problem").Subrouter()
+	r2.HandleFunc("/problemUpdate/{problem}", problemUpdate)
+
 	r := router.R.PathPrefix("/pci").Subrouter()
 	r.HandleFunc("/{method}", endpointsRouter)
 
@@ -92,8 +95,16 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 
 	state := make(map[string]string)
 
+	if pr, ok := req.(pcirpc.HasSession); ok {
+		checkLogin(ctx, pr, state)
+	}
+
 	if pr, ok := req.(pcirpc.HasProblemAccessKey); ok {
-		resolveProblemAccessKey(ctx, pr, state)
+		puid := int64(0)
+		if pr2, ok := req.(pcirpc.HasProblemId); ok {
+			puid = pr2.GetId()
+		}
+		resolveProblemAccessKey(ctx, pr, puid, state)
 	}
 
 	permsReq, ok := perms[params["method"]]

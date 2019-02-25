@@ -60,7 +60,37 @@ func createSubmissionTask(ctx context.Context, req *pcirpc.CreateSubmissionTaskR
 // TODO
 
 func createProblemTestTask(ctx context.Context, req *pcirpc.CreateProblemTestTaskRequest, state map[string]string, res *pcirpc.CreateProblemTestTaskResponse) {
+	tProb, _ := strconv.Atoi(state["PROB"])
+	req.Desc.ProblemRepo = state["REPO"]
+	req.Desc.PCITask.Type = "build"
 
+	descBytes, err := json.Marshal(req.Desc)
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+	current := time.Now()
+
+	tTask := &base.PCITaskItem{
+		Problem:  int64(tProb),
+		Status:   "PENDING",
+		Desc:     string(descBytes),
+		Result:   "{}",
+		Callback: req.Callback,
+	}
+
+	r, err := pcidb.PCIDB.ExecContext(ctx, "INSERT INTO task (problem, creator, state, taskdesc, result, create_at, finish_at, callback) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+		tTask.Problem, ".api", "PENDING", tTask.Desc, tTask.Result, current, current, tTask.Callback)
+
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	res.Success = true
+	res.Uid, _ = r.LastInsertId()
 }
 
 func getTask(ctx context.Context, req *pcirpc.GetPCITaskRequest, state map[string]string, res *pcirpc.GetPCITaskResponse) {
@@ -128,11 +158,13 @@ func updateTask(ctx context.Context, req *pcirpc.UpdatePCITaskRequest, state map
 		return
 	}
 
-	if _, err := pcidb.PCIDB.ExecContext(ctx, "UPDATE task SET state = ?, result = ?, finish_at = ?", req.Task.Status, req.Task.Result, time.Now()); err != nil {
+	if _, err := pcidb.PCIDB.ExecContext(ctx, "UPDATE task SET state = ?, result = ?, finish_at = ? WHERE uid = ?", req.Task.Status, req.Task.Result, time.Now(), req.Task.Uid); err != nil {
 		res.Success = false
 		res.Error = err.Error()
 		return
 	}
+
+	// TODO: call callback
 
 	res.Success = true
 }

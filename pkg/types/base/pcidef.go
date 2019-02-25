@@ -16,6 +16,7 @@ type ProblemVersionState struct {
 	Problem int64     `json:"problem"`
 	Version string    `json:"version"`
 	State   string    `json:"state"`
+	Message string    `json:"message"`
 	LogTime time.Time `json:"created"`
 }
 
@@ -52,8 +53,8 @@ type PCITask struct {
 
 type PCIBuildTaskDesc struct {
 	PCITask
-	Version     string      `json:"lang"`
-	ProblemDesc *PCIProblem `json:"prob"`
+	Version     string `json:"lang"`
+	ProblemRepo string `json:"repo"`
 }
 
 type PCIBuildTaskResult struct {

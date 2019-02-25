@@ -4,9 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 
 	"github.com/erjiaqing/senren2/pkg/httpreq"
 	"github.com/erjiaqing/senren2/pkg/util"
@@ -27,8 +33,47 @@ func init() {
 	}
 }
 
-func getProblem(ctx context.Context, req *pcirpc.GetProblemRequest, state map[string]string, res *pcirpc.GetProblemResponse) {
+func problemUpdate(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	pid, _ := strconv.Atoi(params["problem"])
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
 
+	versions := repo.ParseCommitPush(int64(pid), reqBody)
+
+	stat, err := pcidb.PCIDB.PrepareContext(r.Context(), "INSERT INTO problemVersion (p_uid, version, state, logtime, message) VALUES (?, ?, ?, ?, ?)")
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
+	commitedVersions := 0
+
+	for _, v := range versions {
+		if _, err := stat.ExecContext(r.Context(), pid, v.Version, v.State, v.LogTime, v.Message); err == nil {
+			commitedVersions++
+		} else {
+			logrus.Errorf("Failed to do SQL: %v", err)
+		}
+	}
+	w.Write([]byte(fmt.Sprintf("success, %d versions logged", commitedVersions)))
+}
+
+func getProblem(ctx context.Context, req *pcirpc.GetProblemRequest, state map[string]string, res *pcirpc.GetProblemResponse) {
+	if state["PROB"] == "-1" {
+		state["PROB"] = fmt.Sprintf("%d", req.ProblemId)
+	}
+	row := pcidb.PCIDB.QueryRowContext(ctx, "SELECT uid, title, remoteURL, currentVersion, owner, state FROM problem WHERE uid = ?", state["PROB"])
+	ret := &base.PCIProblem{}
+	if err := row.Scan(&ret.Uid, &ret.Title, &ret.RemoteURL, &ret.CurrentVersion, &ret.Owner, &ret.State); err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+	res.Success = true
+	res.Problem = ret
 }
 
 func createProblem(ctx context.Context, req *pcirpc.CreateProblemRequest, state map[string]string, res *pcirpc.CreateProblemResponse) {
@@ -125,16 +170,16 @@ func createProblemEditSession(ctx context.Context, req *pcirpc.CreateProblemEdit
 		return
 	}
 
-	uidDict := make(map[string]string)
-	if err := json.Unmarshal(dat, uidDict); err != nil {
+	uidDict := make(map[string]interface{})
+	if err := json.Unmarshal(dat, &uidDict); err != nil {
 		res.Success = false
-		res.Error = "failed to clone"
+		res.Error = err.Error()
 		return
 	}
 
-	uid := uidDict["text"]
+	uid, ok := uidDict["text"].(string)
 
-	if uid == "" {
+	if !ok || uid == "" {
 		res.Success = false
 		res.Error = "failed to clone"
 		return

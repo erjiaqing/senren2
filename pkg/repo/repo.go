@@ -53,3 +53,10 @@ type branch struct {
 	Commit *payloadCommit `json:"commit"`
 	Name   string         `json:"name"`
 }
+
+type createRepoHookRequest struct {
+	Active bool              `json:"active"`
+	Config map[string]string `json:"config"`
+	Events []string          `json:"events"`
+	Type   string            `json:"type"`
+}

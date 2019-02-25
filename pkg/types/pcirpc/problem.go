@@ -15,6 +15,7 @@ type CreateProblemResponse struct {
 type CreateProblemEditSessionRequest struct {
 	Session
 	ProblemAccessKey
+	ProblemId int64 `json:"uid"`
 }
 
 type CreateProblemEditSessionResponse struct {
@@ -32,12 +33,29 @@ type CloseProblemEditSessionResponse SuccessErrorOnly
 type GetProblemRequest struct {
 	Session
 	ProblemAccessKey
+	ProblemId int64 `json:"uid"`
 }
 
 type GetProblemResponse struct {
 	SuccessError
 	Problem *base.PCIProblem `json:"problem"`
 }
+
+type GetProblemVersionsRequest GetProblemRequest
+
+type GetProblemVersionsResponse struct {
+	SuccessError
+	Versions []*base.ProblemVersionState `json:"versions"`
+}
+
+type CheckProblemRequest struct {
+	Session
+	ProblemAccessKey
+	ProblemId int64  `json:"uid"`
+	Version   string `json:"version"`
+}
+
+type CheckProblemResponse SuccessErrorOnly
 
 type GetProblemAccessKeyRequest struct {
 	Session
@@ -70,4 +88,16 @@ type HasProblemAccessKey interface {
 
 func (p *ProblemAccessKey) GetKey() string {
 	return p.Key
+}
+
+type ProblemId struct {
+	UID int64 `json:"uid"`
+}
+
+type HasProblemId interface {
+	GetId() int64
+}
+
+func (p *ProblemId) GetId() int64 {
+	return p.UID
 }

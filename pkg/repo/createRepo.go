@@ -23,6 +23,7 @@ type createRepoRequest struct {
 var gitUserName = ""
 var gitUserPass = ""
 var gitServer = ""
+var selfURL = ""
 
 func init() {
 	gitUserName = os.Getenv("PCI_GIT_USER")
@@ -36,6 +37,10 @@ func init() {
 	gitServer = os.Getenv("PCI_GIT_SERV")
 	if gitServer == "" {
 		gitServer = "http://127.0.0.1:3000"
+	}
+	selfURL = os.Getenv("PCI_SELF_URL")
+	if selfURL == "" {
+		selfURL = "http://127.0.0.1:8079"
 	}
 
 	logrus.Infof("Git User: %s", gitUserName)
@@ -59,6 +64,20 @@ func CreateProblemRepo(problem *base.PCIProblem) (*base.PCIProblem, error) {
 	}
 
 	if _, code, err := httpreq.POSTJsonAuth(fmt.Sprintf("%s/api/v1/user/repos", gitServer), reqBody, gitUserName, gitUserPass); err != nil {
+		return problem, err
+	} else if code >= 300 {
+		return problem, fmt.Errorf("Unexpected http response code http 201 expected, %d received (ERRID: HTTP.2xx.300)", code)
+	}
+
+	if _, code, err := httpreq.POSTJsonAuth(fmt.Sprintf("%s/api/v1/repos/%s/p%06d/hooks", gitServer, gitUserName, problem.Uid), &createRepoHookRequest{
+		Active: true,
+		Config: map[string]string{
+			"content_type": "json",
+			"url":          fmt.Sprintf("%s/rpc/pci_problem/problemUpdate/%d", selfURL, problem.Uid),
+		},
+		Events: []string{"push"},
+		Type:   "gitea",
+	}, gitUserName, gitUserPass); err != nil {
 		return problem, err
 	} else if code >= 300 {
 		return problem, fmt.Errorf("Unexpected http response code http 201 expected, %d received (ERRID: HTTP.2xx.300)", code)

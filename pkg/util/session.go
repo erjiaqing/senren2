@@ -2,6 +2,7 @@ package util
 
 import (
 	"crypto/sha1"
+	"encoding/base64"
 	"fmt"
 	"strings"
 	"time"
@@ -11,9 +12,10 @@ const sigSign = "417MD2y3nUNI7e5r1CZ8x6LBLzwkMk4y8FHmrC0srJP5YHXPXUXrcYNj4Bfr417
 
 func SignSession(uid string) string {
 	current := time.Now()
-	sigSignSrc := fmt.Sprintf("%s:%16x:%s", uid, current.UnixNano(), sigSign)
+	ruid := base64.StdEncoding.EncodeToString([]byte(uid))
+	sigSignSrc := fmt.Sprintf("%s:%16x:%s", ruid, current.UnixNano(), sigSign)
 	sigSignRes := fmt.Sprintf("%x", sha1.Sum([]byte(sigSignSrc)))
-	return fmt.Sprintf("%s:%16x:%s", uid, current.UnixNano(), sigSignRes)
+	return fmt.Sprintf("%s:%16x:%s", ruid, current.UnixNano(), sigSignRes)
 }
 
 func CheckSession(sid string) string {
@@ -32,5 +34,9 @@ func CheckSession(sid string) string {
 	if sigSignRes != parts[2] {
 		return ""
 	}
-	return parts[0]
+	uid, err := base64.StdEncoding.DecodeString(parts[0])
+	if err != nil {
+		return ""
+	}
+	return string(uid)
 }

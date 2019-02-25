@@ -15,13 +15,13 @@ type CreateSubmissionTaskResponse struct {
 
 type CreateProblemTestTaskRequest struct {
 	ProblemAccessKey
-	Callback string `json:"callback"`
-	Version  string `json:"version"`
+	Callback string                 `json:"callback"`
+	Desc     *base.PCIBuildTaskDesc `json:"desc"`
 }
 
 type CreateProblemTestTaskResponse struct {
 	SuccessError
-	Uid string `json:"uid"`
+	Uid int64 `json:"uid"`
 }
 
 type GetPCITaskRequest struct {
