@@ -41,6 +41,17 @@ type GetProblemResponse struct {
 	Problem *base.PCIProblem `json:"problem"`
 }
 
+type GetProblemDescriptionRequest struct {
+	Session
+	ProblemAccessKey
+	ProblemId int64 `json:"uid"`
+}
+
+type GetProblemDescriptionResponse struct {
+	SuccessError
+	Description string `json:"description"`
+}
+
 type GetProblemVersionsRequest GetProblemRequest
 
 type GetProblemVersionsResponse struct {

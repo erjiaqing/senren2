@@ -18,6 +18,13 @@ type GetProblemsResponse struct {
 	Problems []*base.Problem `json:"problems"`
 }
 
+type GetPCIDescriptionRequest GetDomainObjectRequest
+
+type GetPCIDescriptionResponse struct {
+	SuccessError
+	Description string `json:"description"`
+}
+
 type CreateProblemRequest struct {
 	Session
 	Problem base.Problem `json:"problem"`

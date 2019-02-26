@@ -70,20 +70,42 @@
                 </el-form-item>
                 <el-form-item
                 class="submission_metainfo_item"
-                label="使用内存">
-                {{ (submission.execute_memory < 0) ? '-' : ((submission.execute_memory) + " ms") }}
+                label="使用内存"
+              >
+                {{ (submission.execute_memory <
+                  0)
+                  ? '-'
+                  :
+                  ((submission.execute_memory)
+                  + " KiB"
+                  )
+                  }}
                   </el-form-item>
                   <el-form-item
                   class="submission_metainfo_item"
                   label="提交时间"
                 >
-                  {{ submission.submit_time | moment("from", "now") }}
+                  <el-tooltip
+                    class="item"
+                    effect="dark"
+                    placement="top-start"
+                  >
+                    <el-button type="text">{{ submission.submit_time | moment("from", "now") }}</el-button>
+                    <template slot="content">{{ submission.submit_time | moment("llll") }}</template>
+                  </el-tooltip>
             </el-form-item>
             <el-form-item
               class="submission_metainfo_item"
               label="评测时间"
             >
-                  {{ submission.judge_time | moment("from", "now") }}
+              <el-tooltip
+                class="item"
+                effect="dark"
+                placement="top-start"
+              >
+                <el-button type="text">{{ submission.judge_time | moment("from", "now") }}</el-button>
+                <template slot="content">{{ submission.judge_time | moment("llll") }}</template>
+              </el-tooltip>
             </el-form-item>
           </el-form>
         </div>

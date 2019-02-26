@@ -2,8 +2,12 @@ package endpoint
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
+
+	"github.com/erjiaqing/senren2/pkg/httpreq"
+	"github.com/erjiaqing/senren2/pkg/types/pcirpc"
 
 	"github.com/erjiaqing/senren2/pkg/db"
 	"github.com/erjiaqing/senren2/pkg/util"
@@ -29,9 +33,38 @@ func createSubmission(ctx context.Context, req *senrenrpc.CreateSubmissionsReque
 		req.Submission.Uid, req.Submission.UserUid, req.Submission.Domain, req.Submission.ProblemUid, req.Submission.ContestUid, req.Submission.Language, req.Submission.Code, "PENDING", "PENDING", req.Submission.SubmitTime, req.Submission.SubmitTime, "", -1, -1, -1, -1, "{}", ""); err != nil {
 		panic(err)
 	}
+
+	probSubkey := ""
+
+	if err := db.DB.QueryRowContext(ctx, "SELECT problemci FROM problem WHERE uid = ?", req.Submission.ProblemUid).Scan(&probSubkey); err != nil {
+		panic(err)
+	}
+
 	res.Domain = senrenrpc.Domain(req.Submission.Domain)
 	res.Success = true
 	res.UID = req.Submission.Uid
+
+	pcireq := &pcirpc.CreateSubmissionTaskRequest{
+		Callback: fmt.Sprintf("%s/rpc/pcicallback/taskcallback/%s", selfURL, util.SignSession(res.UID)),
+		Code: &base.PCIJudgeTaskDesc{
+			Lang: req.Submission.Language,
+			Code: req.Submission.Code,
+		},
+	}
+	pcireq.Key = probSubkey
+	pcireq.Code.Type = "judge"
+
+	for i := uint(0); i < 5; i++ {
+		_, code, err := httpreq.POSTJson(fmt.Sprintf("%s/rpc/pci/createSubmissionTask", pciURL), pcireq)
+		if code >= 300 || err != nil {
+			time.Sleep((1 << i) * time.Second / 10)
+		} else {
+			return
+		}
+	}
+
+	res.Success = false
+	res.Error = "failed to submit to pci"
 }
 
 func getSubmission(ctx context.Context, req *senrenrpc.GetSubmissionRequest, state map[string]string, res *senrenrpc.GetSubmissionResponse) {

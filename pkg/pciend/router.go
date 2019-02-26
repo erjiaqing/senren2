@@ -27,6 +27,7 @@ func init() {
 	logrus.Info("Init routes of pci")
 
 	perms["getProblem"] = ".PROBLEM.READ"
+	perms["getProblemDescription"] = ".PROBLEM.READ"
 	perms["createProblemEditSession"] = ".PROBLEM"
 	perms["closeProblemEditSession"] = ".PROBLEM"
 	perms["createSubmissionTask"] = ".PROBLEM.SUBMISSION.WRITE"
@@ -54,6 +55,9 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "getProblem":
 		req = &pcirpc.GetProblemRequest{}
 		res = &pcirpc.GetProblemResponse{}
+	case "getProblemDescription":
+		req = &pcirpc.GetProblemDescriptionRequest{}
+		res = &pcirpc.GetProblemDescriptionResponse{}
 	case "createProblem":
 		req = &pcirpc.CreateProblemRequest{}
 		res = &pcirpc.CreateProblemResponse{}
@@ -105,35 +109,37 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 			puid = pr2.GetId()
 		}
 		resolveProblemAccessKey(ctx, pr, puid, state)
-	}
 
-	permsReq, ok := perms[params["method"]]
-	if ok {
-		rawPerm := strings.Split(permsReq, ".")
-		tPerm := ""
-		granted := false
-		logrus.Debugf("Requres Permission: %s", permsReq)
-		if g, tok := state["PERM_."]; tok && g == "G" {
-			granted = true
-		}
-		for _, v := range rawPerm {
-			if v == "" {
-				continue
-			}
-			tPerm = tPerm + "." + v
-			if g, tok := state["PERM_"+tPerm]; tok && g == "G" {
+		permsReq, ok := perms[params["method"]]
+		if ok {
+			rawPerm := strings.Split(permsReq, ".")
+			tPerm := ""
+			granted := false
+			logrus.Debugf("Requres Permission: %s", permsReq)
+			if g, tok := state["PERM_."]; tok && g == "G" {
 				granted = true
 			}
-		}
-		if !granted {
-			w.WriteHeader(403)
-			return
+			for _, v := range rawPerm {
+				if v == "" {
+					continue
+				}
+				tPerm = tPerm + "." + v
+				if g, tok := state["PERM_"+tPerm]; tok && g == "G" {
+					granted = true
+				}
+			}
+			if !granted {
+				w.WriteHeader(403)
+				return
+			}
 		}
 	}
 
 	switch params["method"] {
 	case "getProblem":
 		getProblem(ctx, req.(*pcirpc.GetProblemRequest), state, res.(*pcirpc.GetProblemResponse))
+	case "getProblemDescription":
+		getProblemDescription(ctx, req.(*pcirpc.GetProblemDescriptionRequest), state, res.(*pcirpc.GetProblemDescriptionResponse))
 	case "createProblem":
 		createProblem(ctx, req.(*pcirpc.CreateProblemRequest), state, res.(*pcirpc.CreateProblemResponse))
 	case "createProblemEditSession":

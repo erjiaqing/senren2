@@ -2,7 +2,11 @@ package endpoint
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"time"
+
+	"github.com/erjiaqing/senren2/pkg/httpreq"
 
 	"github.com/erjiaqing/senren2/pkg/db"
 	"github.com/erjiaqing/senren2/pkg/types/base"
@@ -59,6 +63,24 @@ func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state m
 
 	res.Problems = ret
 	res.Success = true
+}
+
+func getPCIDescription(ctx context.Context, req *senrenrpc.GetPCIDescriptionRequest, state map[string]string, res *senrenrpc.GetPCIDescriptionResponse) {
+	data, code, err := httpreq.POSTJson(fmt.Sprintf("%s/rpc/pci/getProblemDescription", pciURL), map[string]string{
+		"key": req.Filter,
+	})
+
+	if code >= 300 {
+		res.Success = false
+		res.Error = "remote server return non 2xx response"
+		return
+	} else if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	json.Unmarshal(data, res)
 }
 
 func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, state map[string]string, res *senrenrpc.CreateProblemResponse) {

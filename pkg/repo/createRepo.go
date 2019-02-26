@@ -88,6 +88,14 @@ func CreateProblemRepo(problem *base.PCIProblem) (*base.PCIProblem, error) {
 	return problem, nil
 }
 
+func FetchProblemDescription(problem string, version string) []byte {
+	ret, code, err := httpreq.GETAuth(fmt.Sprintf("%s/%s/raw/commit/%s/description.html", gitServer, problem, version), gitUserName, gitUserPass)
+	if code >= 300 || err != nil {
+		return nil
+	}
+	return ret
+}
+
 func FetchProblemVersions(problem *base.PCIProblem) ([]string, error) {
 	return []string{}, nil
 }

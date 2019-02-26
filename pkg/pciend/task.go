@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/erjiaqing/senren2/pkg/httpreq"
+
 	"github.com/erjiaqing/senren2/pkg/pcidb"
 	"github.com/erjiaqing/senren2/pkg/types/base"
 	"github.com/erjiaqing/senren2/pkg/types/pcirpc"
@@ -164,7 +166,23 @@ func updateTask(ctx context.Context, req *pcirpc.UpdatePCITaskRequest, state map
 		return
 	}
 
+	retTask.Status = req.Task.Status
+	retTask.Result = req.Task.Result
+	retTask.FinishTime = time.Now()
+	retTask.Uid = req.Task.Uid
+	retTask.Problem = req.Task.Problem
+
 	// TODO: call callback
+	if retTask.Callback != "" {
+		for i := uint(0); i < 5; i++ {
+			_, code, err := httpreq.POSTJson(retTask.Callback, retTask)
+			if code >= 300 || err != nil {
+				time.Sleep((1 << i) * time.Second / 10)
+			} else {
+				break
+			}
+		}
+	}
 
 	res.Success = true
 }

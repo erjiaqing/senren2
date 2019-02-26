@@ -194,6 +194,19 @@ func closeProblemEditSession(ctx context.Context, req *pcirpc.CloseProblemEditSe
 	// call problem editor to ignore uncommited edit and delete problem edit session
 }
 
+func getProblemDescription(ctx context.Context, req *pcirpc.GetProblemDescriptionRequest, state map[string]string, res *pcirpc.GetProblemDescriptionResponse) {
+	row := pcidb.PCIDB.QueryRowContext(ctx, "SELECT currentVersion, remoteURL FROM problem WHERE uid = ?", state["PROB"])
+	var rev, remote string
+	if err := row.Scan(&rev, &remote); err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+	ret := repo.FetchProblemDescription(remote, rev)
+	res.Success = (ret != nil)
+	res.Description = string(ret)
+}
+
 func createProblemAccessKey(ctx context.Context, req *pcirpc.CreateProblemAccessKeyRequest, state map[string]string, res *pcirpc.CreateProblemAccessKeyResponse) {
 	pubKey, err := util.GenerateRandomString(24)
 	pubKey = fmt.Sprintf("%08x", time.Now().Unix()) + pubKey

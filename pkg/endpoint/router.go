@@ -6,14 +6,22 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"time"
 
+	"github.com/erjiaqing/senren2/pkg/db"
+	"github.com/erjiaqing/senren2/pkg/types/base"
 	"github.com/erjiaqing/senren2/pkg/types/senrenrpc"
+	"github.com/erjiaqing/senren2/pkg/util"
 
 	"github.com/gorilla/mux"
 
 	"github.com/erjiaqing/senren2/pkg/router"
 	"github.com/sirupsen/logrus"
 )
+
+var selfURL string
+var pciURL string
 
 func init() {
 	r := router.R.PathPrefix("/class").Subrouter()
@@ -23,7 +31,79 @@ func init() {
 	r2.HandleFunc("/uploadHomework", uploadHomework)
 	r2.HandleFunc("/taskOutput", taskOutput)
 
+	r3 := router.R.PathPrefix("/pcicallback").Subrouter()
+	r3.HandleFunc("/taskcallback/{task}", taskCallback)
+
 	logrus.Info("Init routes of class")
+
+	selfURL = os.Getenv("SENREN_SELF_URL")
+	if selfURL == "" {
+		selfURL = "http://127.0.0.1:8080"
+	}
+
+	pciURL = os.Getenv("PCI_SERV")
+	if pciURL == "" {
+		pciURL = "http://127.0.0.1:8079"
+	}
+}
+
+func taskCallback(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	params := mux.Vars(r)
+
+	taskId := util.CheckSessionTime(params["task"], 10*365*24*time.Hour) // almost forever
+	if taskId == "" {
+		w.WriteHeader(404)
+		return
+	}
+
+	reqBody, err := ioutil.ReadAll(r.Body)
+
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	callBacktask := &base.PCITaskItem{}
+	//logrus.Info(string(reqBody))
+
+	if err := json.Unmarshal(reqBody, callBacktask); err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	if callBacktask.Status != "FINISHED" {
+		w.Write([]byte("ignored"))
+		return
+	}
+
+	judge := &base.PCIJudgeResult{}
+	if err := json.Unmarshal([]byte(callBacktask.Result), judge); err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	cemsg := ""
+
+	for _, v := range judge.Detail {
+		if v.Name == "compile" {
+			cemsg = v.Output
+			break
+		}
+	}
+
+	if _, err := db.DB.ExecContext(ctx, "UPDATE submission SET execute_time = ?, execute_memory = ?, state = ?, verdict = ?, judger_response = ?, ce_message = ?, judge_time = ? WHERE uid = ?",
+		int(judge.ExeTime*1000), judge.ExeMemory, "JUDGED", judge.Verdict, callBacktask.Result, cemsg, time.Now(), taskId); err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte(fmt.Sprint(err)))
+		return
+	}
+
+	w.Write([]byte("committed"))
+	return
 }
 
 func uploadHomework(w http.ResponseWriter, r *http.Request) {
@@ -117,6 +197,9 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "getProblems":
 		req = &senrenrpc.GetProblemsRequest{}
 		res = &senrenrpc.GetProblemsResponse{}
+	case "getPCIDescription":
+		req = &senrenrpc.GetPCIDescriptionRequest{}
+		res = &senrenrpc.GetPCIDescriptionResponse{}
 	case "createProblem":
 		req = &senrenrpc.CreateProblemRequest{}
 		res = &senrenrpc.CreateProblemResponse{}
@@ -224,6 +307,8 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getProblem(ctx, req.(*senrenrpc.GetProblemRequest), state, res.(*senrenrpc.GetProblemResponse))
 	case "getProblems":
 		getProblems(ctx, req.(*senrenrpc.GetProblemsRequest), state, res.(*senrenrpc.GetProblemsResponse))
+	case "getPCIDescription":
+		getPCIDescription(ctx, req.(*senrenrpc.GetPCIDescriptionRequest), state, res.(*senrenrpc.GetPCIDescriptionResponse))
 	case "createProblem":
 		createProblem(ctx, req.(*senrenrpc.CreateProblemRequest), state, res.(*senrenrpc.CreateProblemResponse))
 	case "createSubmission":

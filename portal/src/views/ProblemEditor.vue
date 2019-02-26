@@ -61,13 +61,55 @@
               ></el-input>
             </el-form-item>
           </el-form>
+          <el-form
+            label-position="left"
+            inline
+            class="submission_pcikey_container"
+          >
+            <el-form-item
+              class="submission_metainfo_item"
+              label="PCI提交密钥"
+            >
+              <el-input
+                v-model="problem.problem_ci"
+                placeholder=""
+                style="width: 400pt"
+              ></el-input>
+            </el-form-item>
+            <el-form-item
+              class="submission_metainfo_item"
+              label="PCI 操作"
+            >
+              <el-button
+                icon="el-icon-download"
+                @click="loadProblemCI"
+              >从PCI导入题面</el-button>
+            </el-form-item>
+          </el-form>
         </div>
-        <quill-editor
-          v-if="problem"
-          v-model="problem.description"
-          ref="Editor"
-        >
-        </quill-editor>
+        <div>
+          <quill-editor
+            v-if="problem && problem.description.substr(0, 21) != '<!-- !!imported!! -->'"
+            v-model="problem.description"
+            ref="Editor"
+          >
+          </quill-editor>
+          <div v-else-if="problem">
+            <el-alert
+              title="编辑导入的试题可能会破坏ProblemCI特有格式。"
+              close-text="仍然编辑"
+              @close="problem.description = problem.description.substr(21)"
+              type="error"
+              style="margin-top: 4pt;"
+            >
+            </el-alert>
+            <div
+              id="problem-description"
+              v-html="problem.description"
+            >
+            </div>
+          </div>
+        </div>
       </div>
       <div v-if="error">
         <el-alert
@@ -131,6 +173,20 @@ export default {
       res.problem.release = new Date(res.problem.release);
       this.problem = res.problem;
     },
+    loadProblemCI: async function() {
+      this.loading = true;
+      let res = await RPC.doRPC("getPCIDescription", {
+        filter: this.problem.problem_ci
+      });
+      this.loading = false;
+      if (res == null || !res.success) {
+        this.$message({
+          message: "导入错误",
+          type: "danger"
+        });
+      }
+      this.problem.description = "<!-- !!imported!! -->" + res.description;
+    },
     saveProblem: async function() {
       this.loading = true;
       this.problem.release = new Date(this.problem.release);
@@ -190,6 +246,18 @@ export default {
   margin-left: 0;
   padding: 0;
   width: 50%;
+}
+
+#baseinfo_container .submission_pcikey_container .el-form-item {
+  margin-right: 0;
+  margin-bottom: 0;
+  margin-left: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#baseinfo_container .submission_pcikey_container .el-form-item input {
+  font-family: "Courier New", Courier, monospace;
 }
 
 #baseinfo_container label {

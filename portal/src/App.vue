@@ -392,4 +392,35 @@ pre {
   border-width: 1px;
   border-color: #0c0c0c;
 }
+
+.example-io, .example-io th, .example-io td {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #000000;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.example-io td {
+  padding: 4px;
+}
+
+.example-input-title,.example-output-title {
+  font-weight: bolder;
+}
+
+.example-io {
+  margin-bottom: 8px;
+}
+
+.example-io pre {
+  white-space: pre-wrap; /* css-3 */
+  white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+  white-space: -pre-wrap; /* Opera 4-6 */
+  white-space: -o-pre-wrap; /* Opera 7 */
+  word-wrap: break-word; /* Internet Explorer 5.5+ */
+  border: none;
+  padding: 0;
+  margin: 0;
+}
 </style>
