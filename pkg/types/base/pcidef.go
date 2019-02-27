@@ -21,10 +21,11 @@ type ProblemVersionState struct {
 }
 
 type PCIACL struct {
-	Key           string `json:"key"`
-	PrivateKey    string `json:"pkey"`
-	ProblemUID    int64  `json:"puid"`
-	AccessControl string `json:"access_control"`
+	Key           string    `json:"key"`
+	PrivateKey    string    `json:"pkey"`
+	ProblemUID    int64     `json:"puid"`
+	CreateTime    time.Time `json:"create_time"`
+	AccessControl string    `json:"access_control"`
 }
 
 type PCIACLLog struct {

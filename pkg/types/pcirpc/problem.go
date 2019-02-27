@@ -15,7 +15,7 @@ type CreateProblemResponse struct {
 type CreateProblemEditSessionRequest struct {
 	Session
 	ProblemAccessKey
-	ProblemId int64 `json:"uid"`
+	ProblemId
 }
 
 type CreateProblemEditSessionResponse struct {
@@ -33,7 +33,7 @@ type CloseProblemEditSessionResponse SuccessErrorOnly
 type GetProblemRequest struct {
 	Session
 	ProblemAccessKey
-	ProblemId int64 `json:"uid"`
+	ProblemId
 }
 
 type GetProblemResponse struct {
@@ -41,10 +41,19 @@ type GetProblemResponse struct {
 	Problem *base.PCIProblem `json:"problem"`
 }
 
+type GetProblemsRequest struct {
+	Session
+}
+
+type GetProblemsResponse struct {
+	SuccessError
+	Problems []*base.PCIProblem `json:"problems"`
+}
+
 type GetProblemDescriptionRequest struct {
 	Session
 	ProblemAccessKey
-	ProblemId int64 `json:"uid"`
+	ProblemId
 }
 
 type GetProblemDescriptionResponse struct {
@@ -62,25 +71,27 @@ type GetProblemVersionsResponse struct {
 type CheckProblemRequest struct {
 	Session
 	ProblemAccessKey
-	ProblemId int64  `json:"uid"`
-	Version   string `json:"version"`
+	ProblemId
+	Version string `json:"version"`
 }
 
 type CheckProblemResponse SuccessErrorOnly
 
-type GetProblemAccessKeyRequest struct {
+type GetProblemAccessKeysRequest struct {
 	Session
-	Problem int64 `json:"problem"`
+	ProblemAccessKey
+	ProblemId
 }
 
-type GetProblemAccessKeyResponse struct {
+type GetProblemAccessKeysResponse struct {
 	SuccessError
 	Keys []*base.PCIACL `json:"keys"`
 }
 
 type CreateProblemAccessKeyRequest struct {
 	Session
-	Problem     int64  `json:"problem"`
+	ProblemAccessKey
+	ProblemId
 	Permissions string `json:"perms"`
 }
 

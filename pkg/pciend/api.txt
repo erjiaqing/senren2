@@ -7,3 +7,5 @@ createSubmissionTask *pcirpc.CreateSubmissionTaskRequest *pcirpc.CreateSubmissio
 createProblemTestTask *pcirpc.CreateProblemTestTaskRequest *pcirpc.CreateProblemTestTaskResponse
 getTask *pcirpc.GetPCITaskRequest *pcirpc.GetPCITaskResponse
 updateTask *pcirpc.UpdatePCITaskRequest *pcirpc.UpdatePCITaskResponse
+loginBySenrenSid *senrenrpc.GetPCISidRequest *senrenrpc.GetPCISidResponse
+loginToSenren *senrenrpc.AuthRequest *senrenrpc.GetPCISidResponse

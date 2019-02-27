@@ -119,7 +119,7 @@
           height="300px"
         ></editor>
         <h3 v-if="submission.ce_message != ''">编译器输出</h3>
-        <pre style="font-size: 12pt">{{ submission.ce_message }}</pre>
+        <pre style="font-size: 12pt" v-if="submission.ce_message != ''">{{ submission.ce_message }}</pre>
       </div>
     </el-col>
   </el-row>

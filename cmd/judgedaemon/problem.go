@@ -20,7 +20,7 @@ import (
 func checkProblem(uid int64) *base.PCIProblem {
 	req := &pcirpc.GetProblemRequest{}
 	req.Key = pciSession
-	req.ProblemId = uid
+	req.ProblemId.UID = uid
 
 	res, code, err := httpreq.POSTJson(fmt.Sprintf("%s/rpc/pci/getProblem", pciServer), req)
 
@@ -37,6 +37,8 @@ func checkProblem(uid int64) *base.PCIProblem {
 		logrus.Errorf("Failed to get problem: %v", err.Error())
 		return nil
 	}
+
+	logrus.Debug(string(res))
 
 	return ret.Problem
 }

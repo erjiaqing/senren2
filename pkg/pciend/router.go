@@ -5,15 +5,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/erjiaqing/senren2/pkg/router"
 	"github.com/erjiaqing/senren2/pkg/types/pcirpc"
+	"github.com/erjiaqing/senren2/pkg/types/senrenrpc"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
 var perms map[string]string
+var senrenServ string
 
 func init() {
 	perms = make(map[string]string)
@@ -28,10 +31,17 @@ func init() {
 
 	perms["getProblem"] = ".PROBLEM.READ"
 	perms["getProblemDescription"] = ".PROBLEM.READ"
+	perms["getProblemAccessKeys"] = "."
+	perms["createProblemAccessKey"] = "."
 	perms["createProblemEditSession"] = ".PROBLEM"
 	perms["closeProblemEditSession"] = ".PROBLEM"
 	perms["createSubmissionTask"] = ".PROBLEM.SUBMISSION.WRITE"
 	perms["createProblemTestTask"] = ".PROBLEM.TASK.WRITE"
+
+	senrenServ = os.Getenv("SENREN_SERV")
+	if senrenServ == "" {
+		senrenServ = "http://127.0.0.1:8080"
+	}
 }
 
 // TODO context
@@ -55,9 +65,18 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "getProblem":
 		req = &pcirpc.GetProblemRequest{}
 		res = &pcirpc.GetProblemResponse{}
+	case "getProblems":
+		req = &pcirpc.GetProblemsRequest{}
+		res = &pcirpc.GetProblemsResponse{}
 	case "getProblemDescription":
 		req = &pcirpc.GetProblemDescriptionRequest{}
 		res = &pcirpc.GetProblemDescriptionResponse{}
+	case "getProblemVersions":
+		req = &pcirpc.GetProblemVersionsRequest{}
+		res = &pcirpc.GetProblemVersionsResponse{}
+	case "getProblemAccessKeys":
+		req = &pcirpc.GetProblemAccessKeysRequest{}
+		res = &pcirpc.GetProblemAccessKeysResponse{}
 	case "createProblem":
 		req = &pcirpc.CreateProblemRequest{}
 		res = &pcirpc.CreateProblemResponse{}
@@ -82,6 +101,16 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "updateTask":
 		req = &pcirpc.UpdatePCITaskRequest{}
 		res = &pcirpc.UpdatePCITaskResponse{}
+
+	case "loginBySenrenSid":
+		req = &senrenrpc.GetPCISidRequest{}
+		res = &senrenrpc.GetPCISidResponse{}
+	case "loginToSenren":
+		req = &senrenrpc.AuthRequest{}
+		res = &senrenrpc.GetPCISidResponse{}
+	case "isLogin":
+		req = &pcirpc.Session{}
+		res = &senrenrpc.WhoAmIResponse{}
 	}
 
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576)
@@ -138,6 +167,12 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	switch params["method"] {
 	case "getProblem":
 		getProblem(ctx, req.(*pcirpc.GetProblemRequest), state, res.(*pcirpc.GetProblemResponse))
+	case "getProblems":
+		getProblems(ctx, req.(*pcirpc.GetProblemsRequest), state, res.(*pcirpc.GetProblemsResponse))
+	case "getProblemVersions":
+		getProblemVersions(ctx, req.(*pcirpc.GetProblemVersionsRequest), state, res.(*pcirpc.GetProblemVersionsResponse))
+	case "getProblemAccessKeys":
+		getProblemAccessKeys(ctx, req.(*pcirpc.GetProblemAccessKeysRequest), state, res.(*pcirpc.GetProblemAccessKeysResponse))
 	case "getProblemDescription":
 		getProblemDescription(ctx, req.(*pcirpc.GetProblemDescriptionRequest), state, res.(*pcirpc.GetProblemDescriptionResponse))
 	case "createProblem":
@@ -156,6 +191,12 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getTask(ctx, req.(*pcirpc.GetPCITaskRequest), state, res.(*pcirpc.GetPCITaskResponse))
 	case "updateTask":
 		updateTask(ctx, req.(*pcirpc.UpdatePCITaskRequest), state, res.(*pcirpc.UpdatePCITaskResponse))
+	case "loginBySenrenSid":
+		loginBySenrenSid(ctx, req.(*senrenrpc.GetPCISidRequest), state, res.(*senrenrpc.GetPCISidResponse))
+	case "loginToSenren":
+		loginToSenren(ctx, req.(*senrenrpc.AuthRequest), state, res.(*senrenrpc.GetPCISidResponse))
+	case "isLogin":
+		isLogin(ctx, req.(*pcirpc.Session), state, res.(*senrenrpc.WhoAmIResponse))
 	}
 
 	wbody, err := json.Marshal(res)

@@ -48,6 +48,7 @@ func init() {
 // TODO: websocket long connection
 
 func main() {
+	logrus.SetLevel(logrus.DebugLevel)
 	for {
 		t := getGeneralTask()
 		if t == nil {

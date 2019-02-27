@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/erjiaqing/senren2/pkg/types/senrenrpc"
+
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 
@@ -61,6 +63,24 @@ func problemUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fmt.Sprintf("success, %d versions logged", commitedVersions)))
 }
 
+func getProblems(ctx context.Context, req *pcirpc.GetProblemsRequest, state map[string]string, res *pcirpc.GetProblemsResponse) {
+	row, err := pcidb.PCIDB.QueryContext(ctx, "SELECT uid, title, state FROM problem WHERE owner = ?", state["USER"])
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	ret := make([]*base.PCIProblem, 0)
+	for row.Next() {
+		t := &base.PCIProblem{}
+		row.Scan(&t.Uid, &t.Title, &t.State)
+		ret = append(ret, t)
+	}
+	res.Problems = ret
+	res.Success = true
+}
+
 func getProblem(ctx context.Context, req *pcirpc.GetProblemRequest, state map[string]string, res *pcirpc.GetProblemResponse) {
 	if state["PROB"] == "-1" {
 		state["PROB"] = fmt.Sprintf("%d", req.ProblemId)
@@ -77,6 +97,11 @@ func getProblem(ctx context.Context, req *pcirpc.GetProblemRequest, state map[st
 }
 
 func createProblem(ctx context.Context, req *pcirpc.CreateProblemRequest, state map[string]string, res *pcirpc.CreateProblemResponse) {
+	if state["USER"] == "" {
+		res.Success = false
+		res.Error = "login is required"
+		return
+	}
 	tx, err := pcidb.PCIDB.BeginTx(ctx, nil)
 	if err != nil {
 		res.Success = false
@@ -85,13 +110,13 @@ func createProblem(ctx context.Context, req *pcirpc.CreateProblemRequest, state 
 	}
 	if req.Problem.Uid == -1 {
 		// do create
-		qry, err := tx.ExecContext(ctx, "INSERT INTO problem (title, remoteURL, currentVersion, editSession, owner, state) VALUES (?, ?, ?, ?, ?, ?)", req.Problem.Title, ".", "", "-", state["login"], "NEW")
+		qry, err := tx.ExecContext(ctx, "INSERT INTO problem (title, remoteURL, currentVersion, editSession, owner, state) VALUES (?, ?, ?, ?, ?, ?)", req.Problem.Title, ".", "", "-", state["USER"], "NEW")
 		if err != nil {
 			res.Success = false
 			res.Error = err.Error()
 		}
 
-		req.Problem.Owner = state["login"]
+		req.Problem.Owner = state["USER"]
 		req.Problem.CurrentVersion = ""
 		req.Problem.Uid, _ = qry.LastInsertId()
 		req.Problem, err = repo.CreateProblemRepo(req.Problem)
@@ -110,7 +135,7 @@ func createProblem(ctx context.Context, req *pcirpc.CreateProblemRequest, state 
 	}
 
 	// TODO: check currentVersion is valid (exists and built)
-	if _, err := tx.ExecContext(ctx, "UPDATE problem SET title = ?, currentVersion = ? WHERE uid = ? AND owner = ?", req.Problem.Title, req.Problem.CurrentVersion, req.Problem.Uid, state["login"]); err != nil {
+	if _, err := tx.ExecContext(ctx, "UPDATE problem SET title = ?, currentVersion = ? WHERE uid = ? AND owner = ?", req.Problem.Title, req.Problem.CurrentVersion, req.Problem.Uid, state["USER"]); err != nil {
 		res.Success = false
 		res.Error = err.Error()
 		return
@@ -208,8 +233,9 @@ func getProblemDescription(ctx context.Context, req *pcirpc.GetProblemDescriptio
 }
 
 func createProblemAccessKey(ctx context.Context, req *pcirpc.CreateProblemAccessKeyRequest, state map[string]string, res *pcirpc.CreateProblemAccessKeyResponse) {
-	pubKey, err := util.GenerateRandomString(24)
-	pubKey = fmt.Sprintf("%08x", time.Now().Unix()) + pubKey
+	pubKey, err := util.GenerateRandomString(16)
+	probId, _ := strconv.Atoi(state["PROB"])
+	pubKey = fmt.Sprintf("p%06d/", probId) + fmt.Sprintf("%08x", time.Now().Unix()) + pubKey
 	if err != nil {
 		res.Success = false
 		res.Error = err.Error()
@@ -221,7 +247,7 @@ func createProblemAccessKey(ctx context.Context, req *pcirpc.CreateProblemAccess
 		res.Error = err.Error()
 		return
 	}
-	_, err = pcidb.PCIDB.ExecContext(ctx, "INSERT INTO acl (aclkey, aclpkey, puid, perm, create_at) VALUES (?, ?, ?, ?, ?)", pubKey, privKey, req.Problem, req.Permissions, time.Now())
+	_, err = pcidb.PCIDB.ExecContext(ctx, "INSERT INTO acl (aclkey, aclpkey, puid, perm, create_at) VALUES (?, ?, ?, ?, ?)", pubKey, privKey, req.UID, req.Permissions, time.Now())
 	if err != nil {
 		res.Success = false
 		res.Error = err.Error()
@@ -232,7 +258,7 @@ func createProblemAccessKey(ctx context.Context, req *pcirpc.CreateProblemAccess
 	res.Key = &base.PCIACL{
 		Key:           pubKey,
 		PrivateKey:    privKey,
-		ProblemUID:    req.Problem,
+		ProblemUID:    req.UID,
 		AccessControl: req.Permissions,
 	}
 }
@@ -254,4 +280,90 @@ func getProblemVersions(ctx context.Context, req *pcirpc.GetProblemVersionsReque
 		res.Versions = append(res.Versions, t)
 	}
 	res.Success = true
+}
+
+func getProblemAccessKeys(ctx context.Context, req *pcirpc.GetProblemAccessKeysRequest, state map[string]string, res *pcirpc.GetProblemAccessKeysResponse) {
+	row, err := pcidb.PCIDB.QueryContext(ctx, "SELECT aclkey, create_at, perm FROM acl WHERE puid = ?", state["PROB"])
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	ret := make([]*base.PCIACL, 0)
+	for row.Next() {
+		t := &base.PCIACL{}
+		row.Scan(&t.Key, &t.CreateTime, &t.AccessControl)
+		ret = append(ret, t)
+	}
+
+	res.Success = true
+	res.Keys = ret
+}
+
+func loginBySenrenSid(ctx context.Context, req *senrenrpc.GetPCISidRequest, state map[string]string, res *senrenrpc.GetPCISidResponse) {
+	req.Domain = "pci"
+	ret, code, err := httpreq.POSTJson(fmt.Sprintf("%s/rpc/class/getPCISid", senrenServ), req)
+	if err != nil {
+		res.Error = err.Error()
+		res.Success = false
+		return
+	} else if code >= 300 {
+		res.Error = "unexpected http code"
+		res.Success = false
+		return
+	}
+
+	if err := json.Unmarshal(ret, res); err != nil {
+		res.Error = "remote auth server error"
+		res.Success = false
+		return
+	}
+}
+
+func loginToSenren(ctx context.Context, req *senrenrpc.AuthRequest, state map[string]string, res *senrenrpc.GetPCISidResponse) {
+	// force woj group
+	req.SetDomain("0000000000000000")
+	ret, code, err := httpreq.POSTJson(fmt.Sprintf("%s/rpc/class/authUser", senrenServ), req)
+	if err != nil {
+		res.Error = err.Error()
+		res.Success = false
+		return
+	} else if code >= 300 {
+		res.Error = "unexpected http code"
+		res.Success = false
+		return
+	}
+
+	temp := &senrenrpc.AuthResponse{}
+
+	if err := json.Unmarshal(ret, temp); err != nil {
+		res.Error = "remote auth server error"
+		res.Success = false
+		return
+	}
+
+	if !temp.Success {
+		res.Error = temp.Error
+		res.Success = false
+		return
+	}
+
+	logrus.Debugf("LoginResponse: %s", ret)
+
+	loginBySenrenSid(ctx, &senrenrpc.GetPCISidRequest{
+		Domain:  "pci",
+		Session: temp.Session,
+	}, state, res)
+}
+
+func isLogin(ctx context.Context, req *pcirpc.Session, state map[string]string, res *senrenrpc.WhoAmIResponse) {
+	res.Success = true
+	if state["USER"] == "" {
+		return
+	}
+
+	res.User = &base.User{
+		Username: state["USER"],
+	}
 }

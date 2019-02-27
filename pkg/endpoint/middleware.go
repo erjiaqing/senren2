@@ -43,8 +43,11 @@ func checkLogin(ctx context.Context, req senrenrpc.HasSession, domain string, st
 		grole = "NONE"
 	}
 
+	logrus.Debugf("Session: %s", session)
+
 	state["role"] = role
 	state["uid"] = uid
+	state["uname"] = uname
 
 	state["guid"] = guid
 	state["gname"] = guname

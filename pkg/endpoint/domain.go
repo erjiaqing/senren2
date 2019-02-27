@@ -116,3 +116,14 @@ func getDomainUsers(ctx context.Context, req *senrenrpc.GetDomainUsersRequest, s
 func updateDomainUser(ctx context.Context, req *senrenrpc.UpdateDomainUserRequest, state map[string]string, res *senrenrpc.UpdateDomainUserResponse) {
 
 }
+
+func getPCISid(ctx context.Context, req *senrenrpc.GetPCISidRequest, state map[string]string, res *senrenrpc.GetPCISidResponse) {
+	if state["grole"] == "" || state["grole"] == "NONE" {
+		res.Success = false
+		res.Error = "not member of expected group"
+		return
+	}
+
+	res.Session.Sid = util.SignSessionDomain(state["gname"], req.GetDomain())
+	res.Success = true
+}

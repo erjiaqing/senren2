@@ -242,7 +242,9 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "updateDomainUser":
 		req = &senrenrpc.UpdateDomainUserRequest{}
 		res = &senrenrpc.UpdateDomainUserResponse{}
-
+	case "getPCISid":
+		req = &senrenrpc.GetPCISidRequest{}
+		res = &senrenrpc.GetPCISidResponse{}
 	case "getTask":
 		req = &senrenrpc.GetTaskRequest{}
 		res = &senrenrpc.GetTaskResponse{}
@@ -337,7 +339,8 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getDomainUsers(ctx, req.(*senrenrpc.GetDomainUsersRequest), state, res.(*senrenrpc.GetDomainUsersResponse))
 	case "updateDomainUser":
 		updateDomainUser(ctx, req.(*senrenrpc.UpdateDomainUserRequest), state, res.(*senrenrpc.UpdateDomainUserResponse))
-
+	case "getPCISid":
+		getPCISid(ctx, req.(*senrenrpc.GetPCISidRequest), state, res.(*senrenrpc.GetPCISidResponse))
 	case "getTask":
 		getTask(ctx, req.(*senrenrpc.GetTaskRequest), state, res.(*senrenrpc.GetTaskResponse))
 	}

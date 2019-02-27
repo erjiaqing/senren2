@@ -77,3 +77,7 @@ type GetDomainUsersResponse struct {
 	SuccessError
 	Users []*base.User `json:"users"`
 }
+
+type GetPCISidRequest GetDomainObjectRequest
+
+type GetPCISidResponse AuthResponse
