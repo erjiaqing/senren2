@@ -236,3 +236,22 @@ func createProblemAccessKey(ctx context.Context, req *pcirpc.CreateProblemAccess
 		AccessControl: req.Permissions,
 	}
 }
+
+func getProblemVersions(ctx context.Context, req *pcirpc.GetProblemVersionsRequest, state map[string]string, res *pcirpc.GetProblemVersionsResponse) {
+	row, err := pcidb.PCIDB.QueryContext(ctx, "SELECT version, state, logtime, message FROM problemVersion WHERE p_uid = ? ORDER BY logtime DESC", state["PROB"])
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+	}
+
+	res.Versions = make([]*base.ProblemVersionState, 0)
+	for row.Next() {
+		t := &base.ProblemVersionState{}
+		if err := row.Scan(&t.Version, &t.State, &t.LogTime, &t.Message); err != nil {
+			res.Success = false
+			return
+		}
+		res.Versions = append(res.Versions, t)
+	}
+	res.Success = true
+}
