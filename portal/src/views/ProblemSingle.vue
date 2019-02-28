@@ -176,6 +176,9 @@ export default {
         this.error = true;
         return;
       }
+      if (res.problem.alias && this.$route.params.uid != res.problem.alias) {
+        this.$router.replace(`/${this.$route.params.domain}/problem/${res.problem.alias}`);
+      }
       this.problem = res.problem;
     },
     gotoEditor: function() {

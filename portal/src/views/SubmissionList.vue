@@ -11,6 +11,7 @@
     <el-table
       :data="submissions"
       style="width: 100%"
+      @row-click="selectSubmission"
     >
       <el-table-column
         label="评测结果"
@@ -68,7 +69,7 @@
                 label="语言"
               >
                 <template slot-scope="scope">
-                  <router-link :to="'/' + $route.params.domain + '/submission/' + scope.row.uid">{{ languageAbbr[scope.row.language] }}</router-link>
+                  {{ languageAbbr[scope.row.language] }}
                 </template>
       </el-table-column>
       <el-table-column label="提交时间">
@@ -133,6 +134,9 @@ export default {
         return;
       }
       this.submissions = res.submissions;
+    },
+    selectSubmission(e) {
+      this.$router.push(`/${this.$route.params.domain}/submission/${e.uid}`);
     },
     clearFilter() {
       this.$router.push(`/${this.$route.params.domain}/submissions`);

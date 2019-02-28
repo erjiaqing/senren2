@@ -36,6 +36,9 @@ func getProblem(ctx context.Context, req *senrenrpc.GetProblemRequest, state map
 		res.Error = err.Error()
 		return
 	}
+	if req.Filter == "+title" {
+		r.Description = ""
+	}
 	res.Problem = r
 	res.Success = true
 }

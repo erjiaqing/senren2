@@ -16,6 +16,8 @@ import HomeworkSingle from './views/HomeworkSingle.vue'
 import DomainList from './views/DomainList.vue'
 import DomainEdit from './views/DomainEditor.vue'
 import DomainIndex from './views/DomainIndex.vue'
+import DomainInvites from './views/DomainInvite.vue'
+import DomainJoin from './views/DomainJoin.vue'
 import Login from './views/Login.vue'
 
 Vue.use(Router)
@@ -36,7 +38,6 @@ export default new Router({
     },
     {
       path: '/:domain',
-      name: 'domain_home',
       component: Home,
       children: [
         {
@@ -118,6 +119,16 @@ export default new Router({
           path: 'domains',
           name: 'domain_list',
           component: DomainList,
+        },
+        {
+          path: 'invites',
+          name: 'domain_invites',
+          component: DomainInvites,
+        },
+        {
+          path: 'join/:uid',
+          name: 'domain_join',
+          component: DomainJoin,
         },
         {
           path: 'edit',

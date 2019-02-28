@@ -28,7 +28,6 @@ Object.defineProperties(Vue.prototype, {
   }
 });
 
-
 new Vue({
   router,
   store,

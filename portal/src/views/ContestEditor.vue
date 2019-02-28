@@ -118,6 +118,44 @@
             </el-form-item>
           </el-form>
         </div>
+        <div id="problemList">
+          <el-form
+            :inline="true"
+            class="demo-form-inline"
+            label-width="120px"
+          >
+            <el-form-item label="试题UID或短ID">
+              <el-input v-model="addProblemSelector.uid"></el-input>
+            </el-form-item>
+            <el-form-item>
+              <el-button
+                type="primary"
+                @click="queryProblemToAdd"
+              >查询</el-button>
+            </el-form-item>
+            <el-form-item>
+              <span v-if="problemToAdd.uid">
+                {{ problemToAdd.alias || "" }} {{ problemToAdd.title }}
+                <el-button
+                  type="success"
+                  icon="el-icon-check"
+                  circle
+                  @click="addProblem"
+                ></el-button>
+              </span>
+            </el-form-item>
+          </el-form>
+          <draggable v-model="usedProblem">
+            <transition-group name="flip-list">
+              <div
+                v-for="(item, seq) in usedProblem"
+                :key="item.uid"
+              >
+                <button @click="deleteProblem(seq)">x</button> {{ item.alias || item.uid }}. {{ item.title }} <code><small>UID: {{ item.uid }}</small></code>
+              </div>
+            </transition-group>
+          </draggable>
+        </div>
         <quill-editor
           v-if="contest"
           v-model="contest.description"
@@ -144,6 +182,7 @@ import "quill/dist/quill.core.css";
 import "quill/dist/quill.snow.css";
 import "quill/dist/quill.bubble.css";
 import { quillEditor } from "vue-quill-editor";
+import draggable from "vuedraggable";
 
 export default {
   data() {
@@ -151,6 +190,11 @@ export default {
       contest: null,
       loading: false,
       error: false,
+      usedProblem: [],
+      addProblemSelector: {
+        uid: ""
+      },
+      problemToAdd: {},
       releaseTimePickerOptions: {
         shortcuts: [
           {
@@ -171,9 +215,15 @@ export default {
     };
   },
   components: {
-    quillEditor
+    quillEditor,
+    draggable
   },
   methods: {
+    deleteProblem: async function(seq) {
+      let usedProblem = JSON.parse(JSON.stringify(this.usedProblem));
+      usedProblem.splice(seq, 1);
+      this.usedProblem = usedProblem;
+    },
     loadContest: async function() {
       this.loading = true;
       let res = await RPC.doRPC("getContest", {
@@ -186,6 +236,30 @@ export default {
         return;
       }
       this.contest = res.contest;
+      this.usedProblem = JSON.parse(this.contest.problem_list);
+    },
+    addProblem: function() {
+      let t = JSON.parse(JSON.stringify(this.usedProblem));
+      t.push({
+        uid: this.problemToAdd.uid,
+        alias: this.problemToAdd.alias,
+        title: this.problemToAdd.title
+      });
+      this.usedProblem = t;
+      this.problemToAdd = {};
+    },
+    queryProblemToAdd: async function() {
+      this.loading = true;
+      let res = await RPC.doRPC("getProblem", {
+        domain: this.$route.params.domain,
+        uid: this.addProblemSelector.uid,
+        filter: "+title"
+      });
+      if (!res) {
+        this.problemToAdd = {};
+      }
+      this.problemToAdd = res.problem;
+      this.loading = false;
     },
     saveContest: async function() {
       this.loading = true;
@@ -198,6 +272,7 @@ export default {
       this.contest.end_time = new Date(this.contest.end_time);
       this.contest.freeze_time = new Date(this.contest.freeze_time);
       this.contest.release_time = new Date(this.contest.release_time);
+      this.contest.problem_list = JSON.stringify(this.usedProblem);
       let res = await RPC.doRPC("createContest", {
         contest: this.contest
       });
@@ -229,6 +304,11 @@ export default {
 .problem-title {
   font-size: 28pt;
   padding-bottom: 12pt;
+}
+
+#problemList {
+  margin-top: 12pt;
+  margin-bottom: 12pt;
 }
 
 .problem-content {

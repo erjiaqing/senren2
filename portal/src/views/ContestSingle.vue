@@ -13,7 +13,10 @@
           <el-button icon="el-icon-more">评测列表</el-button>
           <el-button icon="el-icon-list">榜单</el-button>
           <el-button icon="el-icon-tickets">讨论区</el-button>
-          <el-button icon="el-icon-edit" @click="gotoEditor">编辑比赛</el-button>
+          <el-button
+            icon="el-icon-edit"
+            @click="gotoEditor"
+          >编辑比赛</el-button>
           <el-button icon="el-icon-share">克隆比赛</el-button>
         </el-button-group>
       </div>
@@ -32,7 +35,33 @@
         class="grid-content problem-content"
         v-if="contest"
       >
-        <div v-html="contest.description"></div>
+        <el-table
+          :data="contest.problem_list"
+          style="width: 100%"
+          @row-click="gotoProblem"
+        >
+          <el-table-column
+            label=""
+            width="100px"
+          >
+            <template slot-scope="scope">
+              {{ probIndex.charAt(scope.$index) }}
+            </template>
+          </el-table-column>
+          <el-table-column
+            prop="title"
+            label="标题"
+          >
+          </el-table-column>
+        </el-table>
+      </div>
+      <div
+        class="grid-content problem-content"
+        v-if="contest"
+      >
+        <div id="contest_desc">
+          <div v-html="contest.description"></div>
+        </div>
       </div>
     </el-col>
   </el-row>
@@ -44,9 +73,10 @@ import { RPC } from "../rpc.js";
 export default {
   data() {
     return {
+      probIndex: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
       contest: null,
       loading: false,
-      error: false,
+      error: false
     };
   },
   methods: {
@@ -61,6 +91,11 @@ export default {
         this.error = true;
         return;
       }
+      res.contest.problem_list = JSON.parse(res.contest.problem_list);
+      for (let i = 0; i < res.contest.problem_list.length; i++) {
+        res.contest.problem_list[i].$index = i;
+        res.contest.problem_list[i].$charid = this.probIndex.charAt(i);
+      }
       this.contest = res.contest;
     },
     gotoEditor: function() {
@@ -68,9 +103,16 @@ export default {
         `/${this.$route.params.domain}/contest/${this.$route.params.uid}/edit`
       );
     },
+    gotoProblem: function(e) {
+      this.$router.push(
+        `/${this.$route.params.domain}/contest/${
+          this.$route.params.uid
+        }/problem/${e.$charid}`
+      );
+    }
   },
   watch: {
-    '$route': function() {
+    $route: function() {
       this.loadContest();
     }
   },
@@ -105,6 +147,16 @@ export default {
   -webkit-box-shadow: 0px 0px 15px #999;
   box-shadow: 0px 0px 15px #999;
   border-radius: 5px;
+}
+
+#contest_desc {
+  padding: 8px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  -moz-box-shadow: 0px 0px 5px #999;
+  -webkit-box-shadow: 0px 0px 5px #999;
+  box-shadow: 0px 0px 5px #999;
 }
 </style>
 

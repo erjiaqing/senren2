@@ -32,6 +32,11 @@ func getContest(ctx context.Context, req *senrenrpc.GetContestRequest, state map
 		res.Error = err.Error()
 		return
 	}
+
+	current := time.Now()
+	if current.Before(res.Contest.StartTime) && !(state["role"] == "ADMIN" || state["role"] == "ROOT") {
+		res.Contest.ProblemList = "[]" // hide problem list
+	}
 }
 
 func getContests(ctx context.Context, req *senrenrpc.GetContestsRequest, state map[string]string, res *senrenrpc.GetContestsResponse) {

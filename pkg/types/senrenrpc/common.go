@@ -9,9 +9,7 @@ type SuccessError struct {
 	Error   string `json:"error"`
 }
 
-type SuccessErrorOnly struct {
-	SuccessError `json:"result"`
-}
+type SuccessErrorOnly SuccessError
 
 type Domain string
 

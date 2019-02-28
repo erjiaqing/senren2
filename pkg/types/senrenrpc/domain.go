@@ -41,6 +41,7 @@ type GetDomainInvitesResponse struct {
 
 type CreateDomainInviteRequest struct {
 	Session
+	Domain       `json:"domain"`
 	DomainInvite *base.DomainInvite `json:"domain_invite"`
 }
 
@@ -48,15 +49,17 @@ type CreateDomainInviteResponse CreateDomainObjectResponse
 
 type JoinDomainRequest struct {
 	Session
-	Domain
-	InviteCode string `json:"invite_code"`
+	Domain         `json:"domain"`
+	NickName       string `json:"nickname"`
+	InviteCode     string `json:"invite_code"`
+	InvitePassword string `json:"invite_password"`
 }
 
 type JoinDomainResponse SuccessErrorOnly
 
 type UpdateDomainUserRequest struct {
 	Session
-	Domain
+	Domain  `json:"domain"`
 	UserUID string `json:"user_uid"`
 	Status  string `json:"status"`
 	Role    string `json:"role"`

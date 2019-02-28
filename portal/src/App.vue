@@ -8,7 +8,7 @@
         <div id="main-nav-btns">
           <el-row :gutter="20">
             <el-col
-              :xs="16"
+              :xs="12"
               :sm="16"
               :md="6"
             >
@@ -20,7 +20,7 @@
             </el-col>
 
             <el-col
-              :xs="8"
+              :xs="12"
               :sm="8"
               :md="6"
               style="float:right"
@@ -53,9 +53,9 @@
                         :type="tags['ROLE_TAG_' + guser.role][0]"
                       >{{ tags['ROLE_TAG_' + guser.role][1] }}</el-tag>
                     </el-dropdown-item>
-                    <el-dropdown-item v-if="user && user.role == 'NONE'">加入 {{ domain.title }}</el-dropdown-item>
+                    <el-dropdown-item v-if="domain && user && user.role == 'NONE'">加入 {{ domain.title }}</el-dropdown-item>
                     <el-dropdown-item
-                      v-if="user && user.role != 'NONE'"
+                      v-if="domain && user && user.role != 'NONE'"
                       disabled
                     >已加入 {{ domain.title }}</el-dropdown-item>
                     <el-dropdown-item
@@ -194,6 +194,7 @@ export default {
       this.user = res.user;
       this.guser = res.user_global;
       this.$store.commit("setUser", res.user);
+      this.$store.commit("setGUser", res.user_global);
     },
     reloadDomain: async function() {
       let res = await RPC.doRPC("getDomain", {
@@ -228,6 +229,12 @@ export default {
         case "editDomain": {
           this.$router.push(
             "/" + (this.$route.params.domain || "woj") + "/edit"
+          );
+          break;
+        }
+        case "editInvite": {
+          this.$router.push(
+            "/" + (this.$route.params.domain || "woj") + "/invites"
           );
           break;
         }
@@ -391,6 +398,10 @@ pre {
   border-style: solid;
   border-width: 1px;
   border-color: #0c0c0c;
+}
+
+pre, code {
+  font-size: 12pt;
 }
 
 .example-io, .example-io th, .example-io td {

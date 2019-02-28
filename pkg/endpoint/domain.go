@@ -90,19 +90,127 @@ func createDomain(ctx context.Context, req *senrenrpc.CreateDomainRequest, state
 }
 
 func getDomainInvite(ctx context.Context, req *senrenrpc.GetDomainInviteRequest, state map[string]string, res *senrenrpc.GetDomainInviteResponse) {
+	if state["global_login"] == "" {
+		res.Success = false
+		res.Error = "Login required"
+		return
+	}
 
+	row := db.DB.QueryRowContext(ctx, "SELECT uid, description, domain, password, validto, invite_role, invite_state FROM domain_invite WHERE uid = ?", req.UID)
+
+	ret := &base.DomainInvite{}
+
+	if err := row.Scan(&ret.Uid, &ret.Description, &ret.Domain, &ret.Password, &ret.ValidTo, &ret.InviteRole, &ret.InviteState); err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	if ret.Password != "" {
+		ret.Password = "*"
+	} else {
+		ret.Password = ""
+	}
+
+	res.Success = true
+	res.DomainInvite = ret
 }
 
 func getDomainInvites(ctx context.Context, req *senrenrpc.GetDomainInvitesRequest, state map[string]string, res *senrenrpc.GetDomainInvitesResponse) {
+	if state["role"] != "ROOT" && state["role"] != "ADMIN" {
+		res.Success = false
+		res.Error = "forbidden"
+		return
+	}
 
+	row, err := db.DB.QueryContext(ctx, "SELECT uid, description, domain, password, validto, invite_role, invite_state FROM domain_invite WHERE domain = ?", req.Domain)
+
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	ret := make([]*base.DomainInvite, 0)
+
+	for row.Next() {
+		t := &base.DomainInvite{}
+		row.Scan(&t.Uid, &t.Description, &t.Domain, &t.Password, &t.ValidTo, &t.InviteRole, &t.InviteState)
+		ret = append(ret, t)
+	}
+
+	res.Success = true
+	res.DomainInvites = ret
 }
 
 func createDomainInvite(ctx context.Context, req *senrenrpc.CreateDomainInviteRequest, state map[string]string, res *senrenrpc.CreateDomainInviteResponse) {
+	if state["role"] != "ROOT" && state["role"] != "ADMIN" {
+		res.Success = false
+		res.Error = "forbidden"
+		return
+	}
+	if (state["role"] == "ADMIN" && req.DomainInvite.InviteRole == "ADMIN") || req.DomainInvite.InviteRole == "ROOT" {
+		res.Success = false
+		res.Error = "you cannot create invitations with privilege higher than you"
+		return
+	}
 
+	dbExec := "UPDATE domain_invite SET description = ? , password = ? , validto = ?, invite_role = ?, invite_state = ? WHERE uid = ? AND domain = ?"
+
+	tDomain := senrenrpc.Domain(req.DomainInvite.Domain)
+	tDomain.ConvertDomain()
+	req.DomainInvite.Domain = string(tDomain)
+
+	if req.DomainInvite.Uid == "" || req.DomainInvite.Uid == noUID {
+		req.DomainInvite.Uid = util.GenUid()
+
+		dbExec = "INSERT INTO domain_invite (description, password, validto, invite_role, invite_state, uid, domain) VALUES (?, ?, ?, ?, ?, ?, ?)"
+	}
+
+	_, err := db.DB.ExecContext(ctx, dbExec, req.DomainInvite.Description, req.DomainInvite.Password, req.DomainInvite.ValidTo, req.DomainInvite.InviteRole, req.DomainInvite.InviteState, req.DomainInvite.Uid, req.Domain.GetDomain())
+
+	if err != nil {
+		res.Error = err.Error()
+		res.Success = false
+		return
+	}
+
+	res.Success = true
+	res.Domain = req.Domain
+	res.UID = req.DomainInvite.Uid
 }
 
 func joinDomain(ctx context.Context, req *senrenrpc.JoinDomainRequest, state map[string]string, res *senrenrpc.JoinDomainResponse) {
+	if state["global_login"] == "" {
+		res.Success = false
+		res.Error = "Login required"
+		return
+	}
 
+	row := db.DB.QueryRowContext(ctx, "SELECT uid, description, domain, validto, password, invite_role, invite_state FROM domain_invite WHERE uid = ? AND domain = ?", req.InviteCode, req.Domain)
+
+	ret := &base.DomainInvite{}
+
+	if err := row.Scan(&ret.Uid, &ret.Description, &ret.Domain, &ret.ValidTo, &ret.Password, &ret.InviteRole, &ret.InviteState); err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	if req.InvitePassword != ret.Password {
+		res.Success = false
+		res.Error = "Wrong Password"
+		return
+	}
+
+	_, err := db.DB.ExecContext(ctx, "INSERT INTO user (uid, guid, username, passwd, nickname, domain, role, state, authsource) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", util.GenUid(), state["global_login"], "."+state["gname"], "", req.NickName, ret.Domain, ret.InviteRole, ret.InviteState, "WOJ")
+	if err != nil {
+		res.Success = false
+		res.Error = "Failed to join group, maybe you are already a group member (" + err.Error() + ")"
+		return
+	}
+
+	res.Success = true
 }
 
 func getDomainUser(ctx context.Context, req *senrenrpc.GetDomainUserRequest, state map[string]string, res *senrenrpc.GetDomainUserResponse) {
