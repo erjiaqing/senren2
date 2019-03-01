@@ -167,6 +167,15 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "getContests":
 		req = &senrenrpc.GetContestsRequest{}
 		res = &senrenrpc.GetContestsResponse{}
+	case "getContestProblem":
+		req = &senrenrpc.GetContestProblemRequest{}
+		res = &senrenrpc.GetContestProblemResponse{}
+	case "getContestSubmissions":
+		req = &senrenrpc.GetContestSubmissionsRequest{}
+		res = &senrenrpc.GetContestSubmissionsResponse{}
+	case "createContestSubmission":
+		req = &senrenrpc.CreateContestSubmissionRequest{}
+		res = &senrenrpc.CreateContestSubmissionResponse{}
 	case "createContest":
 		req = &senrenrpc.CreateContestRequest{}
 		res = &senrenrpc.CreateContestResponse{}
@@ -289,6 +298,12 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getContest(ctx, req.(*senrenrpc.GetContestRequest), state, res.(*senrenrpc.GetContestResponse))
 	case "getContests":
 		getContests(ctx, req.(*senrenrpc.GetContestsRequest), state, res.(*senrenrpc.GetContestsResponse))
+	case "getContestProblem":
+		getContestProblem(ctx, req.(*senrenrpc.GetContestProblemRequest), state, res.(*senrenrpc.GetContestProblemResponse))
+	case "getContestSubmissions":
+		getContestSubmissions(ctx, req.(*senrenrpc.GetContestSubmissionsRequest), state, res.(*senrenrpc.GetContestSubmissionsResponse))
+	case "createContestSubmission":
+		createContestSubmission(ctx, req.(*senrenrpc.CreateContestSubmissionRequest), state, res.(*senrenrpc.CreateContestSubmissionResponse))
 	case "createContest":
 		createContest(ctx, req.(*senrenrpc.CreateContestRequest), state, res.(*senrenrpc.CreateContestResponse))
 	case "getHomework":

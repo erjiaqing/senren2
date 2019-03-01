@@ -13,6 +13,18 @@ type GetContestResponse struct {
 
 type GetContestsRequest GetDomainObjectsRequest
 
+type GetContestProblemRequest GetDomainObjectRequest
+
+type GetContestProblemResponse GetProblemResponse
+
+type CreateContestSubmissionRequest = CreateSubmissionsRequest
+
+type CreateContestSubmissionResponse = CreateSubmissionsResponse
+
+type GetContestSubmissionsRequest = GetSubmissionsRequest
+
+type GetContestSubmissionsResponse = GetSubmissionsResponse
+
 type GetContestsResponse struct {
 	SuccessError
 	Contests []*base.Contest `json:"contests"`

@@ -214,7 +214,8 @@ export default {
       this.loading = true;
       let res = await RPC.doRPC("getSubmission", {
         domain: this.$route.params.domain,
-        uid: this.$route.params.uid
+        filter: this.$route.params.uid,
+        uid: this.$route.params.suid,
       });
       this.loading = false;
       if (res == null) {

@@ -29,6 +29,12 @@ func createSubmission(ctx context.Context, req *senrenrpc.CreateSubmissionsReque
 		return
 	}
 
+	if state["contest"] != "" {
+		req.Submission.ContestUid = state["contest"]
+	} else {
+		req.Submission.ContestUid = "0000000000000000"
+	}
+
 	if _, err := db.DB.ExecContext(ctx, "INSERT INTO submission (uid, user_uid, domain, problem_uid, contest_uid, lang, code, state, verdict, submit_time, judge_time, filename, execute_time, execute_memory, testcase, score, judger_response, ce_message) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
 		req.Submission.Uid, req.Submission.UserUid, req.Submission.Domain, req.Submission.ProblemUid, req.Submission.ContestUid, req.Submission.Language, req.Submission.Code, "PENDING", "PENDING", req.Submission.SubmitTime, req.Submission.SubmitTime, "", -1, -1, -1, -1, "{}", ""); err != nil {
 		panic(err)
@@ -81,14 +87,24 @@ func getSubmission(ctx context.Context, req *senrenrpc.GetSubmissionRequest, sta
 
 func getSubmissions(ctx context.Context, req *senrenrpc.GetSubmissionsRequest, state map[string]string, res *senrenrpc.GetSubmissionsResponse) {
 	r := make([]*base.Submission, 0)
-	query := "SELECT submission.uid, submission.user_uid, IFNULL(user.nickname, ''), submission.domain, submission.problem_uid, problem.title, submission.contest_uid, submission.lang, submission.execute_time, submission.execute_memory, submission.state, submission.verdict, submission.testcase, submission.score, submission.submit_time FROM submission LEFT JOIN problem ON submission.problem_uid = problem.uid LEFT JOIN user ON submission.user_uid = user.uid WHERE submission.domain = ? "
+	query := "SELECT submission.uid, submission.user_uid, IFNULL(user.nickname, user.username), submission.domain, submission.problem_uid, problem.title, submission.contest_uid, submission.lang, submission.execute_time, submission.execute_memory, submission.state, submission.verdict, submission.testcase, submission.score, submission.submit_time FROM submission LEFT JOIN problem ON submission.problem_uid = problem.uid LEFT JOIN user ON submission.user_uid = user.uid WHERE submission.domain = ? "
+
+	if state["extra_config"] == "rank" {
+		query = "SELECT submission.uid, submission.user_uid, IFNULL(user.nickname, user.username), submission.domain, submission.problem_uid, '', '', '', -1, -1, 'JUDGED', submission.verdict, submission.testcase, submission.score, submission.submit_time FROM submission LEFT JOIN user ON submission.user_uid = user.uid WHERE submission.domain = ? "
+	}
+
 	limits := strings.Split(req.Filter, ";")
-	limits = append(limits, make([]string, 3)...)
+	limits = append(limits, make([]string, 4)...)
 	whereArgs := []interface{}{string(req.Domain)}
 	if limits[0] != "" {
 		query += " AND submission.problem_uid = ? "
 		whereArgs = append(whereArgs, limits[0])
 	}
+	/*
+		if state["enable_contest"] == "U" {
+			limits[1] = state["guid"]
+		}
+	*/
 	if limits[1] != "" {
 		query += " AND submission.user_uid = ? "
 		whereArgs = append(whereArgs, limits[1])
@@ -102,8 +118,18 @@ func getSubmissions(ctx context.Context, req *senrenrpc.GetSubmissionsRequest, s
 		}
 		query += "AND (" + tArg + ")"
 	}
+	query += " AND submission.contest_uid = ? "
+	if state["enable_contest"] == "A" || state["enable_contest"] == "U" {
+		whereArgs = append(whereArgs, state["contest_uid"])
+	} else {
+		whereArgs = append(whereArgs, "0000000000000000")
+	}
 
-	rows, err := db.DB.QueryContext(ctx, query+" ORDER BY submit_time DESC LIMIT 50", whereArgs...)
+	if state["extra_config"] != "rank" {
+		query = query + fmt.Sprintf(" ORDER BY submit_time DESC LIMIT %d, 50", req.From)
+	}
+
+	rows, err := db.DB.QueryContext(ctx, query, whereArgs...)
 
 	if err != nil {
 		res.Error = err.Error()

@@ -8,6 +8,7 @@ export default new Vuex.Store({
     domain: {},
     user: {},
     guser: {},
+    contest: {},
   },
   mutations: {
     setDomain(state, newDomain) {
@@ -18,6 +19,9 @@ export default new Vuex.Store({
     },
     setGUser(state, newUser) {
       state.guser = JSON.parse(JSON.stringify(newUser));
+    },
+    setContest(state, newContest) {
+      state.contest = JSON.parse(JSON.stringify(newContest));
     }
   },
   actions: {

@@ -39,12 +39,28 @@ func getProblem(ctx context.Context, req *senrenrpc.GetProblemRequest, state map
 	if req.Filter == "+title" {
 		r.Description = ""
 	}
+
+	if !(state["role"] == "ADMIN" || state["role"] == "ROOT") && r.ReleaseTime.After(time.Now()) {
+		res.Problem = nil
+		res.Success = false
+		res.Error = "Problem not found"
+		return
+	}
+
 	res.Problem = r
 	res.Success = true
 }
 
 func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state map[string]string, res *senrenrpc.GetProblemsResponse) {
-	row, err := db.DB.Query("SELECT uid, rootuid, domain, alias, title, score, releasetime FROM problem WHERE domain = ?", req.Domain)
+	query := "SELECT uid, rootuid, domain, alias, title, score, releasetime FROM problem WHERE domain = ?"
+
+	if state["role"] == "ADMIN" || state["role"] == "ROOT" {
+		query = query + " AND (releasetime < ? OR 1 = 1)"
+	} else {
+		query = query + " AND releasetime < ?"
+	}
+
+	row, err := db.DB.Query(query, req.Domain, time.Now())
 	if err != nil {
 		res.Success = false
 		res.Error = err.Error()

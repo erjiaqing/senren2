@@ -1,27 +1,6 @@
 <template>
   <el-row>
     <el-col :span="24">
-      <div class="grid-content problem-title">
-        <span v-if="contest">{{ contest.title }}</span>
-        <span v-else-if="loading">Loading...</span>
-        <span v-else-if="error">「试题加载失败」</span>
-      </div>
-    </el-col>
-    <el-col :span="24">
-      <div class="grid-content problem-title">
-        <el-button-group>
-          <el-button icon="el-icon-more">评测列表</el-button>
-          <el-button icon="el-icon-list">榜单</el-button>
-          <el-button icon="el-icon-tickets">讨论区</el-button>
-          <el-button
-            icon="el-icon-edit"
-            @click="gotoEditor"
-          >编辑比赛</el-button>
-          <el-button icon="el-icon-share">克隆比赛</el-button>
-        </el-button-group>
-      </div>
-    </el-col>
-    <el-col :span="24">
       <div v-if="error">
         <el-alert
           title="请求失败"
@@ -55,20 +34,13 @@
           </el-table-column>
         </el-table>
       </div>
-      <div
-        class="grid-content problem-content"
-        v-if="contest"
-      >
-        <div id="contest_desc">
-          <div v-html="contest.description"></div>
-        </div>
-      </div>
     </el-col>
   </el-row>
 </template>
 
 <script>
 import { RPC } from "../rpc.js";
+import {mapState} from "vuex";
 
 export default {
   data() {
@@ -111,6 +83,7 @@ export default {
       );
     }
   },
+  computed: mapState(["user"]),
   watch: {
     $route: function() {
       this.loadContest();

@@ -8,6 +8,13 @@
       type="info"
     >
     </el-alert>
+
+    <el-alert
+      title="比赛期间，其他人的提交状态只会为Accepted, Compile Error, Wrong Answer之一"
+      type="info"
+      :closable="false"
+    >
+    </el-alert>
     <el-table
       :data="submissions"
       style="width: 100%"
@@ -28,49 +35,16 @@
       </el-table-column>
       <el-table-column label="试题">
         <template slot-scope="scope">
-          <router-link :to="'/' + $route.params.domain + '/problem/' + scope.row.problem_uid">{{ scope.row.problem_title }}</router-link>
+          {{ scope.row.problem_title }}
         </template>
       </el-table-column>
       <el-table-column label="用户">
         <template slot-scope="scope">
           <span v-if="scope.row.user_name != ''">
-            <router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link>
+            {{ scope.row.user_name }}
           </span>
           <span v-else><i>Unknown</i></span>
         </template>
-      </el-table-column>
-      <el-table-column label="运行时间">
-        <template slot-scope="scope">
-          {{ (scope.row.execute_time <
-            0)
-            ? '-'
-            :
-            ((scope.row.execute_time)
-            + " ms"
-            )
-            }}
-            </template>
-            </el-table-column>
-            <el-table-column
-            label="使用内存"
-          >
-            <template slot-scope="scope">
-              {{ (scope.row.execute_memory <
-                0)
-                ? '-'
-                :
-                ((scope.row.execute_memory)
-                + " KiB"
-                )
-                }}
-                </template>
-                </el-table-column>
-                <el-table-column
-                label="语言"
-              >
-                <template slot-scope="scope">
-                  {{ languageAbbr[scope.row.language] }}
-                </template>
       </el-table-column>
       <el-table-column label="提交时间">
         <template slot-scope="scope">
@@ -125,9 +99,9 @@ export default {
       });
       filter[2] = filter[2].split(",");
       //
-      let res = await RPC.doRPC("getSubmissions", {
+      let res = await RPC.doRPC("getContestSubmissions", {
         domain: this.$route.params.domain,
-        filter: this.$route.params.filter || ""
+        filter: this.$route.params.uid + "|" + (this.$route.params.filter || "")
       });
       this.loading = false;
       if (res == null) {
@@ -137,10 +111,20 @@ export default {
       this.submissions = res.submissions;
     },
     selectSubmission(e) {
-      this.$router.push(`/${this.$route.params.domain}/submission/${e.uid}`);
+      if (e.uid != "") {
+        this.$router.push(
+          `/${this.$route.params.domain}/contest/${e.contest_uid}/submission/${
+            e.uid
+          }`
+        );
+      }
     },
     clearFilter() {
-      this.$router.push(`/${this.$route.params.domain}/submissions`);
+      this.$router.push(
+        `/${this.$route.params.domain}/contest/${
+          this.$route.params.uid
+        }/submissions`
+      );
     }
   },
   watch: {

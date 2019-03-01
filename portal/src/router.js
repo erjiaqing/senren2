@@ -4,9 +4,14 @@ import Home from './views/Home.vue'
 import ProblemSingle from './views/ProblemSingle.vue'
 import ProblemList from './views/ProblemList.vue'
 import ProblemEditor from './views/ProblemEditor.vue'
+import ContestBase from './views/ContestBase.vue'
 import ContestEditor from './views/ContestEditor.vue'
 import ContestSingle from './views/ContestSingle.vue'
 import ContestList from './views/ContestList.vue'
+import ContestProblem from './views/ContestProblem.vue'
+import ContestRank from './views/ContestRank.vue'
+import ContestSubmission from './views/ContestSubmissionSingle.vue'
+import ContestSubmissionList from './views/ContestSubmissionList.vue'
 import SubmissionList from './views/SubmissionList.vue'
 import SubmissionSingle from './views/SubmissionSingle.vue'
 import HomeworkEditor from './views/HomeworkEditor.vue'
@@ -62,13 +67,44 @@ export default new Router({
         },
         {
           path: 'contest/:uid',
-          name: 'contest_single',
-          component: ContestSingle,
-        },
-        {
-          path: 'contest/:uid/edit',
-          name: 'contest_editor',
-          component: ContestEditor,
+          component: ContestBase,
+          children: [
+            {
+              path: '/',
+              name: "contest_index",
+              component: ContestSingle
+            },
+            {
+              path: 'edit',
+              name: 'contest_editor',
+              component: ContestEditor,
+            },
+            {
+              path: 'problem/:seq',
+              name: 'contest_problem',
+              component: ContestProblem,
+            },
+            {
+              path: 'submission/:suid',
+              name: 'contest_submission',
+              component: ContestSubmission,
+            },
+            {
+              path: 'submissions',
+              name: 'contest_submission_list',
+              component: ContestSubmissionList,
+            },
+            {
+              path: 'submissions/:filter',
+              name: 'contest_submission_list_filter',
+              component: ContestSubmissionList,
+            },
+            {
+              path: 'rank',
+              name: 'contest_rank',
+              component: ContestRank,
+            },
+          ]
         },
         {
           path: 'contests',
