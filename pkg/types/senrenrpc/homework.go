@@ -16,6 +16,10 @@ type GetHomeworksResponse struct {
 	Homeworks []*base.Homework `json:"homeworks"`
 }
 
+type SetHomeworkScoreRequest GetDomainObjectRequest
+
+type SetHomeworkScoreResponse CreateDomainObjectResponse
+
 type CreateHomeworkRequest struct {
 	Session
 	Homework base.Homework `json:"homework"`
@@ -38,6 +42,10 @@ type GetHomeworkSubmissionResponse struct {
 }
 
 type GetHomeworkSubmissionsRequest GetDomainObjectsRequest
+
+type GetHomeworkSubmissionKeyRequest GetDomainObjectRequest
+
+type GetHomeworkSubmissionKeyResponse CreateDomainObjectResponse
 
 type GetHomeworkSubmissionsResponse struct {
 	SuccessError

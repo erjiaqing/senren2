@@ -170,6 +170,8 @@ export const ICPC = {
           records[team].penalty += records[team].result[prob].att * 20 + Math.floor(((new Date(submission[i].submit_time)).valueOf() - contest.start_time.valueOf()) / 1000 / 60)
           records[team].solve += 1;
           records[team].result[prob].time = (records[team].result[prob].att + records[team].result[prob].pen + 1) + " - " + Math.floor(((new Date(submission[i].submit_time)).valueOf() - contest.start_time.valueOf()) / 1000 / 60);
+          probs[prob].ac++;
+          probs[prob].att++;
           if (probs[prob].firstblood == -1) {
             probs[prob].firstblood = Math.floor(((new Date(submission[i].submit_time)).valueOf() - contest.start_time.valueOf()) / 1000 / 60);
           }
@@ -182,6 +184,7 @@ export const ICPC = {
         if ((new Date(submission[i].submit_time)).valueOf() > contest.end_time.valueOf()) {
           continue;
         }
+        probs[prob].att++;
         records[team].result[prob].state = 'PENDING';
         records[team].result[prob].pen += 1;
         records[team].result[prob].time = (records[team].result[prob].att + records[team].result[prob].pen) + " - " + Math.floor(((new Date(submission[i].submit_time)).valueOf() - contest.start_time.valueOf()) / 1000 / 60);
@@ -189,6 +192,7 @@ export const ICPC = {
         if ((new Date(submission[i].submit_time)).valueOf() > contest.end_time.valueOf()) {
           continue;
         }
+        probs[prob].att++;
         records[team].result[prob].state = 'NO';
         records[team].result[prob].append = '';
         records[team].result[prob].att += 1;

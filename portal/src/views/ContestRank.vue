@@ -1,14 +1,23 @@
 <template>
   <div>
+    <el-alert
+      title="单击表格某行可以查看用户提交情况。"
+      type="info"
+      :closable="false"
+    >
+    </el-alert>
     <el-table
       :data="rankList.rank"
+      :row-class-name="tableIsSelf"
+      :summary-method="getSummaries"
+      @row-click="gotoSubmissionList"
+      show-summary
       style="width: 100%"
     >
       <el-table-column
         :label="v.text"
         v-for="v in rankList.title"
         :key="v.field"
-        fixed
       >
         <template slot-scope="scope">
           {{ scope.row[v.field] }}
@@ -22,12 +31,25 @@
       <el-table-column
         v-for="(v, id) in rankList.problem"
         :key="id"
+        :label="contest.problem_list[id].$charid"
       >
         <template slot-scope="scope">
-          <i class="submission-ac el-icon-circle-check-outline" v-if="scope.row.result[id].state == 'AC'"> {{ scope.row.result[id].time }}</i>
-          <i class="submission-ac el-icon-circle-check" v-if="scope.row.result[id].state == 'AC_FIRST'"> {{ scope.row.result[id].time }}</i>
-          <i class="submission-wa el-icon-circle-close-outline" v-if="scope.row.result[id].state == 'NO'"> {{ scope.row.result[id].time }}</i>
-          <i class="submission-pending el-icon-remove-outline" v-if="scope.row.result[id].state == 'PENDING'"> {{ scope.row.result[id].time }}</i>
+          <i
+            class="submission-ac el-icon-circle-check-outline"
+            v-if="scope.row.result[id].state == 'AC'"
+          > {{ scope.row.result[id].time }}</i>
+          <i
+            class="submission-ac el-icon-circle-check"
+            v-if="scope.row.result[id].state == 'AC_FIRST'"
+          > {{ scope.row.result[id].time }}</i>
+          <i
+            class="submission-wa el-icon-circle-close-outline"
+            v-if="scope.row.result[id].state == 'NO'"
+          > {{ scope.row.result[id].time }}</i>
+          <i
+            class="submission-pending el-icon-remove-outline"
+            v-if="scope.row.result[id].state == 'PENDING'"
+          > {{ scope.row.result[id].time }}</i>
         </template>
       </el-table-column>
     </el-table>
@@ -103,6 +125,38 @@ export default {
         );
       }
     },
+    gotoSubmissionList(e) {
+      if (e.uid != "") {
+        this.$router.push(
+          `/${this.$route.params.domain}/contest/${this.contest.uid}/submissions/;${
+            e.user.uid
+          }`
+        );
+      }
+    },
+    tableIsSelf({ row, rowIndex }) {
+      if (row.user.uid === this.user.uid) {
+        return "selfRankItem";
+      }
+      return "";
+    },
+    getSummaries(param) {
+      const { columns, data } = param;
+      const sums = [];
+      if (!this.rankList || !this.rankList.title) {
+        return sums;
+      }
+      columns.forEach((column, index) => {
+        if (index < 1 + this.rankList.title.length) {
+          sums[index] = "";
+          return;
+        }
+        let vals = this.rankList.problem[index - 1 - this.rankList.title.length];
+        sums[index] = `${vals.ac} / ${vals.att} / ${vals.ac ? vals.firstblood : "---"}`;
+      });
+
+      return sums;
+    },
     clearFilter() {
       this.$router.push(
         `/${this.$route.params.domain}/contest/${
@@ -173,15 +227,19 @@ export default {
 }
 
 .submission-ac {
-  color: #67C23A;
+  color: #67c23a;
 }
 
 .submission-wa {
-  color: #F56C6C;
+  color: #f56c6c;
+}
+
+.el-table .selfRankItem {
+  background: #ecf5ff;
 }
 
 .submission-pending {
-  color: #E6A23C;
+  color: #e6a23c;
 }
 </style>
 

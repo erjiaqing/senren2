@@ -226,12 +226,12 @@ func updateDomainUser(ctx context.Context, req *senrenrpc.UpdateDomainUserReques
 }
 
 func getPCISid(ctx context.Context, req *senrenrpc.GetPCISidRequest, state map[string]string, res *senrenrpc.GetPCISidResponse) {
-	if state["grole"] == "" || state["grole"] == "NONE" {
+	if state["role"] == "" || state["role"] == "NONE" {
 		res.Success = false
 		res.Error = "not member of expected group"
 		return
 	}
 
-	res.Session.Sid = util.SignSessionDomain(state["gname"], req.GetDomain())
+	res.Session.Sid = util.SignSessionDomain(state["name"], req.GetDomain())
 	res.Success = true
 }

@@ -29,6 +29,7 @@ func init() {
 
 	r2 := router.R.PathPrefix("/attachments").Subrouter()
 	r2.HandleFunc("/uploadHomework", uploadHomework)
+	r2.HandleFunc("/downloadHomework/{token}/{filename}", downloadHomework)
 	r2.HandleFunc("/taskOutput", taskOutput)
 
 	r3 := router.R.PathPrefix("/pcicallback").Subrouter()
@@ -197,6 +198,12 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "createHomeworkSubmission":
 		req = &senrenrpc.CreateHomeworkSubmissionRequest{}
 		res = &senrenrpc.CreateHomeworkSubmissionResponse{}
+	case "getHomeworkSubmissionKey":
+		req = &senrenrpc.GetHomeworkSubmissionKeyRequest{}
+		res = &senrenrpc.GetHomeworkSubmissionKeyResponse{}
+	case "setHomeworkScore":
+		req = &senrenrpc.SetHomeworkScoreRequest{}
+		res = &senrenrpc.SetHomeworkScoreResponse{}
 	case "packHomeworkSubmissions":
 		req = &senrenrpc.PackHomeworkSubmissionsRequest{}
 		res = &senrenrpc.PackHomeworkSubmissionsResponse{}
@@ -314,12 +321,14 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getHomeworkSubmission(ctx, req.(*senrenrpc.GetHomeworkSubmissionRequest), state, res.(*senrenrpc.GetHomeworkSubmissionResponse))
 	case "getHomeworkSubmissions":
 		getHomeworkSubmissions(ctx, req.(*senrenrpc.GetHomeworkSubmissionsRequest), state, res.(*senrenrpc.GetHomeworkSubmissionsResponse))
+	case "getHomeworkSubmissionKey":
+		getHomeworkSubmissionKey(ctx, req.(*senrenrpc.GetHomeworkSubmissionKeyRequest), state, res.(*senrenrpc.GetHomeworkSubmissionKeyResponse))
+	case "setHomeworkScore":
+		setHomeworkScore(ctx, req.(*senrenrpc.SetHomeworkScoreRequest), state, res.(*senrenrpc.SetHomeworkScoreResponse))
 	case "packHomeworkSubmissions":
 		packHomeworkSubmissions(ctx, req.(*senrenrpc.PackHomeworkSubmissionsRequest), state, res.(*senrenrpc.PackHomeworkSubmissionsResponse))
 	case "createHomework":
 		createHomework(ctx, req.(*senrenrpc.CreateHomeworkRequest), state, res.(*senrenrpc.CreateHomeworkResponse))
-	case "createHomeworkSubmission":
-		createHomeworkSubmission(ctx, req.(*senrenrpc.CreateHomeworkSubmissionRequest), state, res.(*senrenrpc.CreateHomeworkSubmissionResponse))
 	case "getProblem":
 		getProblem(ctx, req.(*senrenrpc.GetProblemRequest), state, res.(*senrenrpc.GetProblemResponse))
 	case "getProblems":

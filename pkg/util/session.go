@@ -17,9 +17,10 @@ func SignSession(uid string) string {
 func SignSessionDomain(uid string, domain string) string {
 	current := time.Now()
 	ruid := base64.URLEncoding.EncodeToString([]byte(uid))
-	sigSignSrc := fmt.Sprintf("%s:%s:%16x:%s", ruid, domain, current.UnixNano(), sigSign)
+	ruid = strings.TrimRight(ruid, "=")
+	sigSignSrc := fmt.Sprintf("%s_%s_%16x_%s", ruid, domain, current.UnixNano(), sigSign)
 	sigSignRes := fmt.Sprintf("%x", sha1.Sum([]byte(sigSignSrc)))
-	return fmt.Sprintf("%s:%s:%16x:%s", ruid, domain, current.UnixNano(), sigSignRes)
+	return fmt.Sprintf("%s_%s_%16x_%s", ruid, domain, current.UnixNano(), sigSignRes)
 }
 
 func CheckSession(sid string) string {
@@ -27,7 +28,7 @@ func CheckSession(sid string) string {
 }
 
 func CheckSessionTimeDomain(sid string, limit time.Duration, domain string) string {
-	parts := strings.Split(sid, ":")
+	parts := strings.Split(sid, "_")
 	if len(parts) != 4 {
 		return ""
 	}
@@ -37,10 +38,13 @@ func CheckSessionTimeDomain(sid string, limit time.Duration, domain string) stri
 	if sigtime < current.UnixNano()-limit.Nanoseconds() {
 		return ""
 	}
-	sigSignSrc := fmt.Sprintf("%s:%s:%s:%s", parts[0], parts[1], parts[2], sigSign)
+	sigSignSrc := fmt.Sprintf("%s_%s_%s_%s", parts[0], parts[1], parts[2], sigSign)
 	sigSignRes := fmt.Sprintf("%x", sha1.Sum([]byte(sigSignSrc)))
 	if sigSignRes != parts[3] {
 		return ""
+	}
+	for len(parts[0])%4 != 0 {
+		parts[0] += "="
 	}
 	uid, err := base64.URLEncoding.DecodeString(parts[0])
 	if err != nil {

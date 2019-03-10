@@ -51,6 +51,7 @@ type HomeworkSubmission struct {
 	Attachments string    `json:"attachments"`
 	Nick        string    `json:"nick"`
 	CreateTime  time.Time `json:"create_time"`
+	Score       int       `json:"score"`
 }
 
 type HomeworkArchiveDescriptor struct {

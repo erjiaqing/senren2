@@ -61,6 +61,12 @@
           >
             {{ contest.freeze_time | moment("YYYY-MM-DD HH:mm:ss") }}
           </el-form-item>
+          <el-form-item
+            class="contest_metadata_item"
+            label="比赛规则"
+          >
+            {{ contest.type }}
+          </el-form-item>
         </el-form>
         <div id="contest_desc">
           <div v-html="contest.description"></div>
@@ -152,6 +158,7 @@ export default {
   margin-bottom: 8px;
   font-size: 12pt;
   line-height: 16pt;
+  width: 100%;
 }
 
 .problem-title {

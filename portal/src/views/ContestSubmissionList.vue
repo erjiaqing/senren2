@@ -10,7 +10,7 @@
     </el-alert>
 
     <el-alert
-      title="比赛期间，其他人的提交状态只会为Accepted, Compile Error, Wrong Answer之一"
+      title="比赛期间，其他人的提交状态只会为 Accepted, Wrong Answer, Compile Error, Pending 之一"
       type="info"
       :closable="false"
     >
@@ -18,6 +18,7 @@
     <el-table
       :data="submissions"
       style="width: 100%"
+      :row-class-name="tableIsSelf"
       @row-click="selectSubmission"
     >
       <el-table-column
@@ -58,6 +59,7 @@
 <script>
 import { RPC } from "../rpc.js";
 import { ConstString } from "../consts.js";
+import { mapState } from "vuex";
 
 export default {
   data() {
@@ -119,6 +121,13 @@ export default {
         );
       }
     },
+    tableIsSelf({ row, rowIndex }) {
+      if (row.user_uid === this.user.uid) {
+        return "selfRankItem";
+      }
+      return "";
+    },
+    computed: mapState(["user", "contest"]),
     clearFilter() {
       this.$router.push(
         `/${this.$route.params.domain}/contest/${
@@ -127,6 +136,7 @@ export default {
       );
     }
   },
+  computed: mapState(["user", "contest"]),
   watch: {
     $route: function() {
       this.loadSubmission();
@@ -176,6 +186,9 @@ export default {
   margin-left: 0;
   padding: 0;
   width: 50%;
+}
+.el-table .selfRankItem {
+  background: #ecf5ff;
 }
 
 #baseinfo_container label {

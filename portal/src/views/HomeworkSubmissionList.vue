@@ -78,9 +78,23 @@
                 </el-tag>
               </template>
             </el-table-column>
+            <el-table-column label="分数">
+              <template slot-scope="scope">
+                <span v-if="scope.row.__score >= 0">
+                  <el-tag>
+                    {{ scope.row.__score }}
+                  </el-tag>
+                </span>
+                <span v-else>
+                  <el-tag type="info">
+                    未打分
+                  </el-tag>
+                </span>
+              </template>
+            </el-table-column>
             <el-table-column label="操作">
               <template slot-scope="scope">
-                <router-link :to="'/' + $route.params.domain + '/homework/' + $route.params.uid + '/show/' + scope.row.__uid">批改</router-link>
+                <router-link :to="'/' + $route.params.domain + '/homework/' + $route.params.uid + '/submission/' + scope.row.__uid">批改</router-link>
               </template>
             </el-table-column>
           </el-table>
@@ -128,7 +142,11 @@ export default {
           title: "作业打包完成",
           message: h("p", { style: "text-align:center" }, [
             h("p", null, [
-              h("a", { attrs: { href: qr }, style: "font-size:24px" }, "单击这里下载")
+              h(
+                "a",
+                { attrs: { href: qr }, style: "font-size:24px" },
+                "单击这里下载"
+              )
             ]),
             h("p", null, "链接24小时内有效")
           ])
@@ -198,6 +216,7 @@ export default {
         });
         subres["__nick"] = nick;
         subres["__uid"] = element.uid;
+        subres["__score"] = element.score;
         sublist.push(subres);
       });
       console.log(sublist);

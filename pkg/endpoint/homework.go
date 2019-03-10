@@ -8,8 +8,12 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gorilla/mux"
 
 	"github.com/erjiaqing/senren2/pkg/publicchan"
 
@@ -39,6 +43,24 @@ func getHomework(ctx context.Context, req *senrenrpc.GetHomeworkRequest, state m
 	res.Homework = hw
 }
 
+func setHomeworkScore(ctx context.Context, req *senrenrpc.SetHomeworkScoreRequest, state map[string]string, res *senrenrpc.SetHomeworkScoreResponse) {
+	if !(state["role"] == "ADMIN" || state["role"] == "ROOT") {
+		res.Success = false
+		res.Error = "Forbidden"
+		return
+	}
+	score, err := strconv.Atoi(req.Filter)
+	if err != nil {
+		score = -1
+	}
+	_, err = db.DB.ExecContext(ctx, "UPDATE homework_submission SET score = ? WHERE uid = ? AND domain = ?", score, req.UID, req.Domain)
+	if err != nil {
+		res.Success = false
+		res.Error = err.Error()
+	}
+	res.Success = true
+}
+
 func getHomeworks(ctx context.Context, req *senrenrpc.GetHomeworksRequest, state map[string]string, res *senrenrpc.GetHomeworksResponse) {
 	res.Homeworks = make([]*base.Homework, 0)
 	rows, err := db.DB.QueryContext(ctx, "SELECT uid, domain, title, start_time, end_time FROM homework WHERE `domain` = ?", req.Domain)
@@ -65,11 +87,20 @@ func getHomeworks(ctx context.Context, req *senrenrpc.GetHomeworksRequest, state
 
 func getHomeworkSubmission(ctx context.Context, req *senrenrpc.GetHomeworkSubmissionRequest, state map[string]string, res *senrenrpc.GetHomeworkSubmissionResponse) {
 	sub := &base.HomeworkSubmission{}
-	row := db.DB.QueryRowContext(ctx, "SELECT uid, domain, useruid, homework_uid, attachments, create_time FROM homework_submission WHERE useruid = ? AND homework_uid = ?", state["guid"], req.UID)
-	if err := row.Scan(&sub.Uid, &sub.Domain, &sub.UserUid, &sub.HomeworkUid, &sub.Attachments, &sub.CreateTime); err != nil {
-		res.Success = false
-		res.Error = "Not found"
-		return
+	if req.Filter != "" && (state["role"] == "ADMIN" || state["role"] == "ROOT") {
+		row := db.DB.QueryRowContext(ctx, "SELECT homework_submission.uid, homework_submission.domain, homework_submission.useruid, homework_submission.homework_uid, homework_submission.attachments, homework_submission.create_time, homework_submission.score, user.nickname FROM homework_submission, user WHERE homework_submission.uid = ? AND homework_submission.domain = ? AND homework_submission.useruid = user.uid", req.Filter, req.Domain)
+		if err := row.Scan(&sub.Uid, &sub.Domain, &sub.UserUid, &sub.HomeworkUid, &sub.Attachments, &sub.CreateTime, &sub.Score, &sub.Nick); err != nil {
+			res.Success = false
+			res.Error = "Not found"
+			return
+		}
+	} else {
+		row := db.DB.QueryRowContext(ctx, "SELECT uid, domain, useruid, homework_uid, attachments, create_time, score FROM homework_submission WHERE useruid = ? AND homework_uid = ?", state["uid"], req.UID)
+		if err := row.Scan(&sub.Uid, &sub.Domain, &sub.UserUid, &sub.HomeworkUid, &sub.Attachments, &sub.CreateTime, &sub.Score); err != nil {
+			res.Success = false
+			res.Error = "Not found"
+			return
+		}
 	}
 	res.Success = true
 	res.HomeworkSubmission = sub
@@ -77,7 +108,7 @@ func getHomeworkSubmission(ctx context.Context, req *senrenrpc.GetHomeworkSubmis
 
 func getHomeworkSubmissions(ctx context.Context, req *senrenrpc.GetHomeworkSubmissionsRequest, state map[string]string, res *senrenrpc.GetHomeworkSubmissionsResponse) {
 	sub := make([]*base.HomeworkSubmission, 0)
-	row, err := db.DB.QueryContext(ctx, "SELECT homework_submission.uid, homework_submission.domain, homework_submission.useruid, homework_submission.homework_uid, homework_submission.attachments, homework_submission.create_time, user.nickname FROM homework_submission LEFT JOIN user ON homework_submission.domain = user.domain AND homework_submission.useruid = user.guid WHERE homework_submission.homework_uid = ? AND homework_submission.domain = ?", req.Filter, state["domain"])
+	row, err := db.DB.QueryContext(ctx, "SELECT homework_submission.uid, homework_submission.domain, homework_submission.useruid, homework_submission.homework_uid, homework_submission.attachments, homework_submission.create_time, homework_submission.score, user.nickname FROM homework_submission LEFT JOIN user ON homework_submission.domain = user.domain AND homework_submission.useruid = user.uid WHERE homework_submission.homework_uid = ? AND homework_submission.domain = ?", req.Filter, state["domain"])
 	if err != nil {
 		res.Success = false
 		res.Error = err.Error()
@@ -85,7 +116,7 @@ func getHomeworkSubmissions(ctx context.Context, req *senrenrpc.GetHomeworkSubmi
 	for row.Next() {
 		t := &base.HomeworkSubmission{}
 		tNick := ""
-		row.Scan(&t.Uid, &t.Domain, &t.UserUid, &t.HomeworkUid, &t.Attachments, &t.CreateTime, &tNick)
+		row.Scan(&t.Uid, &t.Domain, &t.UserUid, &t.HomeworkUid, &t.Attachments, &t.CreateTime, &t.Score, &tNick)
 		t.Attachments = tNick + "!!" + t.Attachments
 		sub = append(sub, t)
 	}
@@ -191,8 +222,52 @@ func createHomework(ctx context.Context, req *senrenrpc.CreateHomeworkRequest, s
 	res.Success = true
 }
 
-func createHomeworkSubmission(ctx context.Context, req *senrenrpc.CreateHomeworkSubmissionRequest, state map[string]string, res *senrenrpc.CreateHomeworkSubmissionResponse) {
+func getHomeworkSubmissionKey(ctx context.Context, req *senrenrpc.GetHomeworkSubmissionKeyRequest, state map[string]string, res *senrenrpc.GetHomeworkSubmissionKeyResponse) {
+	sub := &base.HomeworkSubmission{}
+	filterStr := strings.Split(req.Filter, ",")
+	filterStr = append(filterStr, "", "")
+	if filterStr[1] != "" && (state["grole"] == "ADMIN" || state["grole"] == "ROOT") {
+		row := db.DB.QueryRowContext(ctx, "SELECT uid, domain, useruid, homework_uid, attachments, create_time FROM homework_submission WHERE uid = ? AND homework_uid = ?", filterStr[1], req.UID)
+		if err := row.Scan(&sub.Uid, &sub.Domain, &sub.UserUid, &sub.HomeworkUid, &sub.Attachments, &sub.CreateTime); err != nil {
+			res.Success = false
+			res.Error = "Not found"
+			return
+		}
+	} else {
+		row := db.DB.QueryRowContext(ctx, "SELECT uid, domain, useruid, homework_uid, attachments, create_time FROM homework_submission WHERE useruid = ? AND homework_uid = ?", state["uid"], req.UID)
+		if err := row.Scan(&sub.Uid, &sub.Domain, &sub.UserUid, &sub.HomeworkUid, &sub.Attachments, &sub.CreateTime); err != nil {
+			res.Success = false
+			res.Error = "Not found"
+			return
+		}
+	}
 
+	submitted := strings.Split(sub.Attachments, ";")
+	exists := false
+	for _, v := range submitted {
+		if v == "" {
+			continue
+		}
+
+		v2 := strings.Split(v, ",")
+		if len(v2) < 5 {
+			continue
+		}
+
+		if v2[2] == filterStr[0] {
+			exists = true
+			break
+		}
+	}
+
+	if !exists {
+		res.Success = false
+		res.Error = "Not exists"
+		return
+	}
+
+	res.Success = true
+	res.UID = util.SignSession(filterStr[0])
 }
 
 type uploadHomeworkResponse senrenrpc.CreateHomeworkSubmissionResponse
@@ -241,13 +316,13 @@ func doHomeworkUpload(ctx context.Context, r *http.Request, req *senrenrpc.Creat
 	}
 
 	doCreate := false
-	row2 := db.DB.QueryRowContext(ctx, "SELECT uid, domain, useruid, homework_uid, attachments, create_time FROM homework_submission WHERE useruid = ? AND homework_uid = ?", state["guid"], uhomework)
+	row2 := db.DB.QueryRowContext(ctx, "SELECT uid, domain, useruid, homework_uid, attachments, create_time FROM homework_submission WHERE useruid = ? AND homework_uid = ?", state["uid"], uhomework)
 	if err := row2.Scan(&homeworkSub.Uid, &homeworkSub.Domain, &homeworkSub.UserUid, &homeworkSub.HomeworkUid, &homeworkSub.Attachments, &homeworkSub.CreateTime); err != nil {
 		// not submitted before
 		doCreate = true
 		homeworkSub.Uid = util.GenUid()
 		homeworkSub.Domain = homework.Domain
-		homeworkSub.UserUid = state["guid"]
+		homeworkSub.UserUid = state["uid"]
 		homeworkSub.Attachments = ""
 		homeworkSub.HomeworkUid = homework.Uid
 	}
@@ -343,12 +418,12 @@ func doHomeworkUpload(ctx context.Context, r *http.Request, req *senrenrpc.Creat
 	newSubmitted = append(newSubmitted, strings.Join([]string{itemname, base64.StdEncoding.EncodeToString([]byte(handler.Filename)), res.UID, fmt.Sprint(handler.Size), fileExt}, ","))
 	homeworkSub.Attachments = strings.Join(newSubmitted, ";")
 
-	queryStr := "UPDATE homework_submission SET attachments = ?, create_time = ? WHERE uid = ? AND domain = ? AND useruid = ? AND homework_uid = ?"
+	queryStr := "UPDATE homework_submission SET attachments = ?, score = ?, create_time = ? WHERE uid = ? AND domain = ? AND useruid = ? AND homework_uid = ?"
 	if doCreate {
-		queryStr = "INSERT INTO homework_submission (attachments, create_time, uid, domain, useruid, homework_uid) VALUES (?, ?, ?, ?, ?, ?)"
+		queryStr = "INSERT INTO homework_submission (attachments, score, create_time, uid, domain, useruid, homework_uid) VALUES (?, ?, ?, ?, ?, ?)"
 	}
 
-	if _, err := db.DB.ExecContext(ctx, queryStr, homeworkSub.Attachments, homeworkSub.CreateTime, homeworkSub.Uid, homeworkSub.Domain, homeworkSub.UserUid, homeworkSub.HomeworkUid); err != nil {
+	if _, err := db.DB.ExecContext(ctx, queryStr, homeworkSub.Attachments, -1, homeworkSub.CreateTime, homeworkSub.Uid, homeworkSub.Domain, homeworkSub.UserUid, homeworkSub.HomeworkUid); err != nil {
 		res.Error = err.Error()
 		res.Success = false
 		return
@@ -356,4 +431,20 @@ func doHomeworkUpload(ctx context.Context, r *http.Request, req *senrenrpc.Creat
 	res.Success = true
 	res.UID = homeworkSub.Uid
 	res.Domain = senrenrpc.Domain(homeworkSub.Domain)
+}
+
+func downloadHomework(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	token := params["token"]
+	validUid := util.CheckSessionTime(token, 30*time.Second)
+	if validUid == "" {
+		w.WriteHeader(404)
+		return
+	}
+	logrus.Infof("Download: %s / %s", validUid, params["filename"])
+	f, err := os.Open(filepath.Join("upload", validUid[13:], validUid[:13], params["filename"]))
+	if err != nil {
+		w.WriteHeader(404)
+	}
+	io.Copy(w, f)
 }

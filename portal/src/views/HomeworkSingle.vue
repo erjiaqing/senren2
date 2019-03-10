@@ -121,7 +121,7 @@
                   type="success"
                   v-if="submission_result[scope.row.name]"
                 >
-                  <i class="el-icon-success"></i> {{ submission_result[scope.row.name].fullname }} , {{ submission_result[scope.row.name].size }} 字节
+                  <i class="el-icon-success"></i> {{ submission_result[scope.row.name].fullname }} , {{ parseSize(submission_result[scope.row.name].size) }}
                 </el-tag>
                 <el-tag
                   size="small"
@@ -183,6 +183,16 @@ export default {
     QrcodeVue
   },
   methods: {
+    parseSize(size) {
+      let retSuffix = ["B", "KB", "MB", "GB"];
+      let sufSz = 0;
+      size = Number(size);
+      while (size > 0.5 * Math.pow(10, sufSz + 1)) {
+        sufSz++;
+        size /= 1000;
+      }
+      return Math.round(size * 100) / 100 + retSuffix[sufSz];
+    },
     generatePhoneUploadQR: function() {
       let data =
         window.localStorage.getItem("sid") +
