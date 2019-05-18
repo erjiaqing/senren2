@@ -1,6 +1,10 @@
 <template>
   <div>
-    <div class="grid-content problem-title" style="text-align:left">
+    <div
+      class="grid-content problem-title"
+      style="text-align:left"
+      v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
+    >
       <el-button-group>
         <el-button @click="$router.push('/' + $route.params.domain + '/problem/aaaaaaaaaaaaaaaa/edit')">+ 创建试题</el-button>
       </el-button-group>
@@ -23,7 +27,11 @@
         </template>
       </el-table-column>
     </el-table>
-    <div class="grid-content problem-title" style="text-align:left">
+    <div
+      class="grid-content problem-title"
+      style="text-align:left"
+      v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
+    >
       <el-button-group>
         <el-button @click="$router.push('/' + $route.params.domain + '/problem/aaaaaaaaaaaaaaaa/edit')">+ 创建试题</el-button>
       </el-button-group>
@@ -32,6 +40,7 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import { RPC } from "../rpc.js";
 
 export default {
@@ -57,6 +66,7 @@ export default {
       this.problems = res.problems;
     }
   },
+  computed: mapState(["user"]),
   created() {
     this.loadProblem();
   }

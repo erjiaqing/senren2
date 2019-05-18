@@ -19,7 +19,7 @@
             label-width="80px"
           >
             <!-- <el-form-item label="说明"> -->
-              <pre style="text-align:left;font-size: 10pt;">{{inviteInfo.description}}</pre>
+            <pre style="text-align:left;font-size: 10pt;">{{inviteInfo.description}}</pre>
             <!-- </el-form-item> -->
             <el-form-item label="邀请码">
               <el-input
@@ -98,16 +98,21 @@ export default {
       this.loading = false;
       if (res == null) {
         this.error = true;
-        this.errorText = "获取小组邀请码信息失败"
+        this.errorText = "获取小组邀请码信息失败";
         return;
       }
       if (!res.success) {
-        this.$router.push("/"+(this.$route.params.domain || "woj")+"/login");
-        return
+        this.$router.push(
+          "/" + (this.$route.params.domain || "woj") + "/login"
+        );
+        return;
       }
       this.inviteInfo = res.domain_invite;
       this.loginForm.invite_code = res.domain_invite.invite_uid;
       this.loginForm.nickname = this.guser.nickname;
+      const urlParams = new URLSearchParams(window.location.search);
+      const myParam = urlParams.get("p");
+      this.loginForm.invite_password = myParam;
     },
     domainLogin: async function() {
       let res = await RPC.doRPC("joinDomain", {

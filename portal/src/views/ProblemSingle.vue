@@ -13,21 +13,22 @@
           <el-button
             icon="el-icon-edit-outline"
             @click="codeEditor = !codeEditor"
+            v-if="user"
           >{{ codeEditor ? '收起编辑器' : '代码编辑器' }}</el-button>
           <el-button
             icon="el-icon-more"
             @click="$router.push('/' + $route.params.domain + '/submissions/' + problem.uid)"
           >评测结果</el-button>
-          <el-button icon="el-icon-tickets">讨论区</el-button>
+          <!-- <el-button icon="el-icon-tickets">讨论区</el-button> -->
           <el-button
             icon="el-icon-edit"
             @click="gotoEditor"
             v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
           >编辑试题</el-button>
-          <el-button
+          <!-- <el-button
             icon="el-icon-share"
             v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
-          >克隆试题</el-button>
+          >克隆试题</el-button> -->
         </el-button-group>
       </div>
     </el-col>
@@ -36,7 +37,7 @@
         <el-alert
           title="请求失败"
           type="error"
-          description="可能的原因：服务器故障、网络问题或试题不存在"
+          description="可能的原因：服务器故障、网络问题、试题不存在或未登陆"
           show-icon
         >
         </el-alert>
@@ -65,11 +66,19 @@
             </el-option>
           </el-select>
           <el-button-group style="float:right;">
-            <el-button icon="el-icon-edit">暂存</el-button>
+            <el-button
+              icon="el-icon-upload2"
+              @click="loadCode()"
+            >恢复</el-button>
+            <el-button
+              icon="el-icon-download"
+              @click="saveCode()"
+            >暂存</el-button>
             <el-button
               type="success"
               icon="el-icon-upload"
               @click="submitCode"
+              :disabled="selectedLanguage == ''"
             >提交</el-button>
           </el-button-group>
           <editor
@@ -177,9 +186,33 @@ export default {
         return;
       }
       if (res.problem.alias && this.$route.params.uid != res.problem.alias) {
-        this.$router.replace(`/${this.$route.params.domain}/problem/${res.problem.alias}`);
+        this.$router.replace(
+          `/${this.$route.params.domain}/problem/${res.problem.alias}`
+        );
       }
       this.problem = res.problem;
+    },
+    saveCode: function() {
+      localStorage.setItem(
+        `code-${this.problem.uid}`,
+        JSON.stringify({ lang: this.selectedLanguage, code: this.code })
+      );
+      const h = this.$createElement;
+      this.$message({
+        message: "代码已暂存",
+        type: "success"
+      });
+    },
+    loadCode: function() {
+      let code = localStorage.getItem(`code-${this.problem.uid}`);
+      if (code) {
+        let c2 = JSON.parse(code);
+        this.code = c2.code;
+        this.selectedLanguage = c2.lang;
+      }
+      this.$message({
+        message: "代码已加载"
+      });
     },
     gotoEditor: function() {
       this.$router.push(
@@ -205,13 +238,20 @@ export default {
         }
       });
 
+      let success = true;
+
       if (res == null || res.success != true) {
+        success = false;
         this.error = true;
       }
 
       console.log(res);
       loading.close();
-      this.$router.push(`/${this.$route.params.domain}/submission/${res.uid}`);
+      if (success) {
+        this.$router.push(
+          `/${this.$route.params.domain}/submission/${res.uid}`
+        );
+      }
     },
     langChange: function(newLang) {
       console.log(`Switched to ${newLang}`);

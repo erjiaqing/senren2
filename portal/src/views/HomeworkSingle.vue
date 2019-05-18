@@ -23,7 +23,7 @@
             @click="$router.push('/' + $route.params.domain + '/homework/' + homework.uid + '/submissions')"
             v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
           >提交结果</el-button>
-          <el-button icon="el-icon-tickets">讨论区</el-button>
+          <!-- <el-button icon="el-icon-tickets">讨论区</el-button> -->
         </el-button-group>
       </div>
     </el-col>

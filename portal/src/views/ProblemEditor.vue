@@ -23,7 +23,7 @@
             icon="el-icon-download"
             @click="loadProblem"
           >恢复试题</el-button>
-          <el-button icon="el-icon-share">克隆试题</el-button>
+          <!-- <el-button icon="el-icon-share">克隆试题</el-button> -->
         </el-button-group>
       </div>
     </el-col>

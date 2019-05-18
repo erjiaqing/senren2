@@ -189,7 +189,8 @@ export default {
       });
       if (res == null || !res.success) {
         this.user = null;
-        return;
+        res = {user: null, user_global: null};
+        //return;
       }
       this.user = res.user;
       this.guser = res.user_global;
@@ -400,11 +401,14 @@ pre {
   border-color: #0c0c0c;
 }
 
-pre, code {
+pre,
+code {
   font-size: 12pt;
 }
 
-.example-io, .example-io th, .example-io td {
+.example-io,
+.example-io th,
+.example-io td {
   border-width: 1px;
   border-style: solid;
   border-color: #000000;
@@ -416,7 +420,8 @@ pre, code {
   padding: 4px;
 }
 
-.example-input-title,.example-output-title {
+.example-input-title,
+.example-output-title {
   font-weight: bolder;
 }
 

@@ -1,10 +1,10 @@
 module.exports = {
-  //baseUrl: 'senren',
+  baseUrl: 'oj',
   productionSourceMap: false,
   devServer: {
     proxy: {
       "/rpc": {
-        target: "http://127.0.0.1:8080",
+        target: "https://acm.whu.edu.cn:8080",
         changeOrigin: true,
       }
     }

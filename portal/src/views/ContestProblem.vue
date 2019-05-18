@@ -55,10 +55,18 @@
             </el-option>
           </el-select>
           <el-button-group style="float:right;">
-            <el-button icon="el-icon-edit">暂存</el-button>
+            <el-button
+              icon="el-icon-upload2"
+              @click="loadCode()"
+            >恢复</el-button>
+            <el-button
+              icon="el-icon-download"
+              @click="saveCode()"
+            >暂存</el-button>
             <el-button
               type="success"
               icon="el-icon-upload"
+              :disabled="selectedLanguage == ''"
               @click="submitCode"
             >提交</el-button>
           </el-button-group>
@@ -160,7 +168,7 @@ export default {
       let res = await RPC.doRPC("getContestProblem", {
         domain: this.$route.params.domain,
         uid: this.$route.params.uid,
-        filter: this.$route.params.seq,
+        filter: this.$route.params.seq
       });
       this.loading = false;
       if (res == null) {
@@ -168,6 +176,28 @@ export default {
         return;
       }
       this.problem = res.problem;
+    },
+    saveCode: function() {
+      localStorage.setItem(
+        `code-${this.problem.uid}`,
+        JSON.stringify({ lang: this.selectedLanguage, code: this.code })
+      );
+      const h = this.$createElement;
+      this.$message({
+        message: "代码已暂存",
+        type: "success"
+      });
+    },
+    loadCode: function() {
+      let code = localStorage.getItem(`code-${this.problem.uid}`);
+      if (code) {
+        let c2 = JSON.parse(code);
+        this.code = c2.code;
+        this.selectedLanguage = c2.lang;
+      }
+      this.$message({
+        message: "代码已加载"
+      });
     },
     submitCode: async function() {
       const loading = this.$loading({
@@ -194,7 +224,11 @@ export default {
 
       console.log(res);
       loading.close();
-      this.$router.push(`/${this.$route.params.domain}/contest/${this.$route.params.uid}/submission/${res.uid}`);
+      this.$router.push(
+        `/${this.$route.params.domain}/contest/${
+          this.$route.params.uid
+        }/submission/${res.uid}`
+      );
     },
     langChange: function(newLang) {
       console.log(`Switched to ${newLang}`);

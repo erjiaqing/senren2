@@ -12,5 +12,8 @@ export const RPC = {
     },
     setSession(sid) {
         localStorage.setItem('sid', sid);
+        if (sid == "") {
+            localStorage.removeItem('sid');
+        }
     }
 }

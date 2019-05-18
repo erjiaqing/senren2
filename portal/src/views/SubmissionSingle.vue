@@ -41,7 +41,10 @@
             >
               <span v-if="tags['JUDGE_TAG_' + submission.verdict]">
                 <el-tag :type="tags['JUDGE_TAG_' + submission.verdict][0]">
-                  <img v-if="submission.status == 'PENDING'" src="@/assets/loading.gif"/>
+                  <img
+                    v-if="submission.status == 'PENDING'"
+                    src="@/assets/loading.gif"
+                  />
                   {{ tags['JUDGE_TAG_' + submission.verdict][1] }}</el-tag>
               </span>
             </el-form-item>
@@ -121,7 +124,26 @@
           height="300px"
         ></editor>
         <h3 v-if="submission.ce_message != ''">编译器输出</h3>
-        <pre style="font-size: 12pt" v-if="submission.ce_message != ''">{{ submission.ce_message }}</pre>
+        <pre
+          style="font-size: 12pt"
+          v-if="submission.ce_message != ''"
+        >{{ submission.ce_message }}</pre>
+        <div v-if="judgerResponse">
+          <h3>评测详情</h3>
+          <el-steps
+            direction="vertical"
+            :active="3"
+          >
+            <el-step
+              :title="d.name"
+              :status="d.verdict == 'AC' ? 'success' : (d.verdict == 'IG' ? 'wait' : 'error')"
+              :description="d.verdict != 'IG' ? (d.verdict + ' / ' + d.exe_time + ' s / ' + d.exe_memory + ' KiB') : 'Not judged' "
+              :icon="d.icon"
+              v-for="d in judgerResponse.detail"
+              :key="d.name"
+            ></el-step>
+          </el-steps>
+        </div>
       </div>
     </el-col>
   </el-row>
@@ -143,6 +165,7 @@ export default {
       selectedLanguage: "",
       codeHighlight: "",
       languages: {},
+      judgerResponse: {},
       loadingInterval: -1,
       languagePool: [
         {
@@ -224,6 +247,30 @@ export default {
       this.submission = res.submission;
       this.langChange(res.submission.language);
       this.code = this.submission.code;
+      let ti = JSON.parse(this.submission.judger_response);
+      let compilePos = 0;
+      if (ti && ti.detail) {
+        for (let i = 0; i < ti.detail.length; i++) {
+          if (ti.detail[i].name == "compile") {
+            compilePos = i;
+          } else {
+            if (ti.detail[i].verdict == 'AC') {
+              ti.detail[i].icon = "el-icon-success";
+            } else if (ti.detail[i].verdict == 'IG') {
+              ti.detail[i].icon = "el-icon-remove";
+            } else {
+              ti.detail[i].icon = "el-icon-error";
+            }
+          }
+        }
+        let compileDat = ti.detail[compilePos];
+        compileDat.exe_memory /= 1024;
+        compileDat.name = "编译";
+        compileDat.icon = "el-icon-cpu";
+        ti.detail.splice(compilePos, 1);
+        ti.detail.unshift(compileDat);
+      }
+      this.judgerResponse = ti;
     },
     langChange: function(newLang) {
       console.log(`Switched to ${newLang}`);

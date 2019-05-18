@@ -3,6 +3,7 @@
     <div
       class="grid-content problem-title"
       style="text-align:left"
+      v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
     >
       <el-button-group>
         <el-button @click="$router.push('/' + $route.params.domain + '/contest/aaaaaaaaaaaaaaaa/edit')">+ 创建比赛</el-button>
@@ -37,6 +38,7 @@
     <div
       class="grid-content problem-title"
       style="text-align:left"
+      v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
     >
       <el-button-group>
         <el-button @click="$router.push('/' + $route.params.domain + '/contest/aaaaaaaaaaaaaaaa/edit')">+ 创建比赛</el-button>
@@ -46,6 +48,7 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
 import { RPC } from "../rpc.js";
 
 export default {
@@ -71,6 +74,7 @@ export default {
       this.contests = res.contests;
     }
   },
+  computed: mapState(["user"]),
   created() {
     this.loadContests();
   }
