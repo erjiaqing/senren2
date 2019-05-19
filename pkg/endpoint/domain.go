@@ -232,6 +232,6 @@ func getPCISid(ctx context.Context, req *senrenrpc.GetPCISidRequest, state map[s
 		return
 	}
 
-	res.Session.Sid = util.SignSessionDomain(state["name"], req.GetDomain())
+	res.Session.Sid = util.SignSessionDomain(state["uname"], req.GetDomain())
 	res.Success = true
 }

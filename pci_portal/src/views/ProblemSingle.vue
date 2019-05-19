@@ -227,7 +227,7 @@ export default {
             h(
               "a",
               {
-                attrs: { href: "http://127.0.0.1:8084/" + res.uid },
+                attrs: { href: "https://acm.whu.edu.cn:8080/pcieditor/" + res.uid },
                 style: "font-size:24px"
               },
               "单击这里进入"

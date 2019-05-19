@@ -59,9 +59,9 @@
                 0)
                 ? '-'
                 :
-                ((scope.row.execute_memory)
-                + " KiB"
-                )
+                util.formatSize(scope.row.execute_memory
+                *
+                1024)
                 }}
                 </template>
                 </el-table-column>
@@ -84,6 +84,7 @@
 <script>
 import { RPC } from "../rpc.js";
 import { ConstString } from "../consts.js";
+import { Util } from "../util.js";
 
 export default {
   data() {
@@ -96,6 +97,7 @@ export default {
       tags: ConstString,
       filterApplied: false,
       filter: [],
+      util: Util,
       loadingInterval: -1,
       languageAbbr: {
         "c.gcc99": "C",

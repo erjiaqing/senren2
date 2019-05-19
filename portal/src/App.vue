@@ -189,7 +189,7 @@ export default {
       });
       if (res == null || !res.success) {
         this.user = null;
-        res = {user: null, user_global: null};
+        res = { user: null, user_global: null };
         //return;
       }
       this.user = res.user;
@@ -438,5 +438,10 @@ code {
   border: none;
   padding: 0;
   margin: 0;
+}
+
+i[class^=el-][class*= el-] {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 </style>

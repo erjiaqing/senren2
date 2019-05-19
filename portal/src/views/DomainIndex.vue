@@ -14,6 +14,7 @@
         class="grid-content problem-content"
         v-if="domain"
         v-html="domain.description"
+        ref="problemContent"
       ></div>
     </el-col>
   </el-row>
@@ -49,6 +50,11 @@ export default {
         return;
       }
       this.domain = res.domain;
+      this.$nextTick(function() {
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        Han(this.$refs.problemContent).render()
+        console.log("Math and Han Format Rendered");
+      });
     },
   },
   watch: {

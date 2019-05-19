@@ -81,9 +81,9 @@
                   0)
                   ? '-'
                   :
-                  ((submission.execute_memory)
-                  + " KiB"
-                  )
+                  util.formatSize(submission.execute_memory
+                  *
+                  1024)
                   }}
                   </el-form-item>
                   <el-form-item
@@ -130,19 +130,50 @@
         >{{ submission.ce_message }}</pre>
         <div v-if="judgerResponse">
           <h3>评测详情</h3>
-          <el-steps
-            direction="vertical"
-            :active="3"
-          >
-            <el-step
-              :title="d.name"
-              :status="d.verdict == 'AC' ? 'success' : (d.verdict == 'IG' ? 'wait' : 'error')"
-              :description="d.verdict != 'IG' ? (d.verdict + ' / ' + d.exe_time + ' s / ' + d.exe_memory + ' KiB') : 'Not judged' "
-              :icon="d.icon"
-              v-for="d in judgerResponse.detail"
+
+          <el-collapse accordion>
+            <el-collapse-item
+              v-for="(d) in judgerResponse.detail"
               :key="d.name"
-            ></el-step>
-          </el-steps>
+              :title="d.name + ' : ' + (d.verdict != 'IG' ? (d.verdict + ' / ' + d.exe_time + ' s / ' + d.exe_memory + ' KiB') : '未评测')"
+            >
+              <template slot="title">
+                <div v-if="d.verdict == 'IG'">
+                  <span style="color: #C0C4CC"><i class="el-icon-minus"></i> {{ d.name }} 未评测</span>
+                </div>
+                <div v-else-if="d.verdict == 'AC'">
+                  <span style="color: #67C23A"><i class="el-icon-check"></i> {{ d.name }} 通过 {{ d.exe_time }} s / {{ util.formatSize(d.exe_memory * 1024) }}</span>
+                </div>
+                <div v-else>
+                  <span style="color: #F56C6C"><i class="el-icon-close"></i> {{ d.name }} {{ d.verdict }} {{ d.exe_time }} s / {{ util.formatSize(d.exe_memory * 1024) }}</span>
+                </div>
+                <!-- #67C23A -->
+                <!-- #F56C6C -->
+              </template>
+              <div
+                v-if="d.verdict == 'IG'"
+                style="color: #C0C4CC"
+              >未评测</div>
+              <div v-else>
+                <div v-if="d.input">
+                  <h4>输入</h4>
+                  <pre>{{ d.input }}</pre>
+                </div>
+                <div v-if="d.output">
+                  <h4>输出</h4>
+                  <pre>{{ d.output }}</pre>
+                </div>
+                <div v-if="d.answer">
+                  <h4>答案</h4>
+                  <pre>{{ d.answer }}</pre>
+                </div>
+                <div v-if="d.comment">
+                  <h4>比较器</h4>
+                  <pre>{{ d.comment }}</pre>
+                </div>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
         </div>
       </div>
     </el-col>
@@ -152,6 +183,7 @@
 <script>
 import { RPC } from "../rpc.js";
 import { ConstString } from "../consts.js";
+import { Util } from "../util.js";
 
 export default {
   data() {
@@ -162,6 +194,7 @@ export default {
       codeEditor: false,
       code: "",
       tags: ConstString,
+      util: Util,
       selectedLanguage: "",
       codeHighlight: "",
       languages: {},
@@ -229,6 +262,9 @@ export default {
     editor: require("vue2-ace-editor")
   },
   methods: {
+    getJudgeDetail: function(e) {
+      console.log(e);
+    },
     loadSubmission: async function() {
       if (this.submission && this.submission.status != "PENDING") {
         clearInterval(this.loadingInterval);
@@ -254,10 +290,10 @@ export default {
           if (ti.detail[i].name == "compile") {
             compilePos = i;
           } else {
-            if (ti.detail[i].verdict == 'AC') {
+            if (ti.detail[i].verdict == "AC") {
               ti.detail[i].icon = "el-icon-success";
-            } else if (ti.detail[i].verdict == 'IG') {
-              ti.detail[i].icon = "el-icon-remove";
+            } else if (ti.detail[i].verdict == "IG") {
+              ti.detail[i].icon = "el-icon-minus";
             } else {
               ti.detail[i].icon = "el-icon-error";
             }
@@ -355,6 +391,11 @@ export default {
 
 .submission_metainfo_container {
   padding: 0;
+}
+
+i[class^="el-"] {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 </style>
 

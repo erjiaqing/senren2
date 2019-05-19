@@ -143,6 +143,48 @@ func getContestSubmissions(ctx context.Context, req *senrenrpc.GetContestSubmiss
 	}
 }
 
+func getContestSubmission(ctx context.Context, req *senrenrpc.GetContestSubmissionRequest, state map[string]string, res *senrenrpc.GetContestSubmissionResponse) {
+	contest := &base.Contest{}
+
+	tFilter := strings.Split(req.Filter, "|")
+	tFilter = append(tFilter, []string{"", "", ""}...)
+
+	row := db.DB.QueryRowContext(ctx, "SELECT uid, freeze_time, release_time FROM contest WHERE `uid` = ? AND `domain` = ?", tFilter[0], req.Domain)
+	if err := row.Scan(&contest.Uid, &contest.FreezeTime, &contest.ReleaseTime); err != nil {
+		res.Success = false
+		res.Error = err.Error()
+		return
+	}
+
+	current := time.Now()
+	hideState := true
+	if contest.ReleaseTime.After(current) && !(state["role"] == "ADMIN" || state["role"] == "ROOT") {
+		state["enable_contest"] = "U"
+	} else {
+		state["enable_contest"] = "A"
+		hideState = false
+	}
+
+	state["contest_uid"] = contest.Uid
+	req.Filter = tFilter[1]
+
+	state["extra_config"] = tFilter[2]
+
+	getSubmission(ctx, req, state, res)
+
+	if hideState && res.Submission != nil {
+		if res.Submission.Uid != state["uid"] {
+			res.Submission = nil
+			res.Success = false
+			res.Error = "not found"
+		} else {
+			res.Submission.ExecuteMemory = -1
+			res.Submission.ExecuteTime = -1
+			res.Submission.JudgerResponse = "{}"
+		}
+	}
+}
+
 func createContestSubmission(ctx context.Context, req *senrenrpc.CreateContestSubmissionRequest, state map[string]string, res *senrenrpc.CreateContestSubmissionResponse) {
 	contest := &base.Contest{}
 

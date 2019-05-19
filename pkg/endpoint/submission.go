@@ -23,7 +23,7 @@ func createSubmission(ctx context.Context, req *senrenrpc.CreateSubmissionsReque
 
 	ok := true
 
-	if req.Submission.UserUid, ok = state["uid"]; !ok {
+	if req.Submission.UserUid, ok = state["uid"]; !ok || state["uid"] == "" || state["uid"] == "0000000000000000" {
 		res.Success = false
 		res.Error = "Login Required"
 		return
@@ -75,7 +75,11 @@ func createSubmission(ctx context.Context, req *senrenrpc.CreateSubmissionsReque
 
 func getSubmission(ctx context.Context, req *senrenrpc.GetSubmissionRequest, state map[string]string, res *senrenrpc.GetSubmissionResponse) {
 	r := &base.Submission{}
-	row := db.DB.QueryRowContext(ctx, "SELECT uid, user_uid, domain, problem_uid, contest_uid, lang, code, execute_time, execute_memory, state, verdict, testcase, score, judger_response, ce_message, submit_time, judge_time FROM submission WHERE uid = ? AND domain = ?", req.UID, req.Domain)
+	cuid := "0000000000000000"
+	if state["enable_contest"] == "A" || state["enable_contest"] == "U" {
+		cuid = state["contest_uid"]
+	}
+	row := db.DB.QueryRowContext(ctx, "SELECT uid, user_uid, domain, problem_uid, contest_uid, lang, code, execute_time, execute_memory, state, verdict, testcase, score, judger_response, ce_message, submit_time, judge_time FROM submission WHERE uid = ? AND domain = ? AND contest_uid = ?", req.UID, req.Domain, cuid)
 	if err := row.Scan(&r.Uid, &r.UserUid, &r.Domain, &r.ProblemUid, &r.ContestUid, &r.Language, &r.Code, &r.ExecuteTime, &r.ExecuteMemory, &r.Status, &r.Verdict, &r.Testcase, &r.Score, &r.JudgerResponse, &r.CEMessage, &r.SubmitTime, &r.JudgeTime); err != nil {
 		res.Error = err.Error()
 		res.Success = false

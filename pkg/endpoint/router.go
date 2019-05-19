@@ -174,6 +174,9 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 	case "getContestSubmissions":
 		req = &senrenrpc.GetContestSubmissionsRequest{}
 		res = &senrenrpc.GetContestSubmissionsResponse{}
+	case "getContestSubmission":
+		req = &senrenrpc.GetContestSubmissionRequest{}
+		res = &senrenrpc.GetContestSubmissionResponse{}
 	case "createContestSubmission":
 		req = &senrenrpc.CreateContestSubmissionRequest{}
 		res = &senrenrpc.CreateContestSubmissionResponse{}
@@ -309,6 +312,8 @@ func endpointsRouter(w http.ResponseWriter, r *http.Request) {
 		getContestProblem(ctx, req.(*senrenrpc.GetContestProblemRequest), state, res.(*senrenrpc.GetContestProblemResponse))
 	case "getContestSubmissions":
 		getContestSubmissions(ctx, req.(*senrenrpc.GetContestSubmissionsRequest), state, res.(*senrenrpc.GetContestSubmissionsResponse))
+	case "getContestSubmission":
+		getContestSubmission(ctx, req.(*senrenrpc.GetContestSubmissionRequest), state, res.(*senrenrpc.GetContestSubmissionResponse))
 	case "createContestSubmission":
 		createContestSubmission(ctx, req.(*senrenrpc.CreateContestSubmissionRequest), state, res.(*senrenrpc.CreateContestSubmissionResponse))
 	case "createContest":

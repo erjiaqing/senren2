@@ -35,19 +35,19 @@
       >
         <template slot-scope="scope">
           <i
-            class="submission-ac el-icon-circle-check-outline"
+            class="submission-ac el-icon-circle-check"
             v-if="scope.row.result[id].state == 'AC'"
           > {{ scope.row.result[id].time }}</i>
           <i
-            class="submission-ac el-icon-circle-check"
+            class="submission-ac el-icon-success"
             v-if="scope.row.result[id].state == 'AC_FIRST'"
           > {{ scope.row.result[id].time }}</i>
           <i
-            class="submission-wa el-icon-circle-close-outline"
+            class="submission-wa el-icon-remove-outline"
             v-if="scope.row.result[id].state == 'NO'"
           > {{ scope.row.result[id].time }}</i>
           <i
-            class="submission-pending el-icon-remove-outline"
+            class="submission-pending el-icon-time"
             v-if="scope.row.result[id].state == 'PENDING'"
           > {{ scope.row.result[id].time }}</i>
         </template>

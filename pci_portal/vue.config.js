@@ -1,5 +1,5 @@
 module.exports = {
-  //baseUrl: 'senren',
+  baseUrl: 'pci',
   productionSourceMap: false,
   devServer: {
     proxy: {

@@ -27,13 +27,14 @@ func authUser(ctx context.Context, req *senrenrpc.AuthRequest, state map[string]
 	if user.Password != "" && !util.CheckPass(user.Password, req.Password) {
 		res.Success = false
 		res.Error = "Domain Wrong password"
-		return
+		// return
 	}
 
 	// then try global user
 	if !res.Success {
 		// Olive Auth
 		authres, err := util.AuthOlive(req.Username, req.Password)
+		// authres, err := true, error(nil)
 		if err != nil {
 			res.Success = false
 			res.Error = err.Error()
@@ -53,7 +54,7 @@ func authUser(ctx context.Context, req *senrenrpc.AuthRequest, state map[string]
 		if err := qry.Scan(&user.GUid, &user.Username, &user.Nickname); err != nil {
 			user.Uid = util.GenUid()
 			logrus.Infof("New user from olive: %s", user.Uid)
-			if _, err := db.DB.Exec("INSERT INTO `user` (`uid`, `guid`, `username`, `nickname`, `domain`, `role`) VALUES (?, ?, ?, ?, ?, ?)", user.Uid, user.Uid, req.Username, req.Username, publicDomain, "USER"); err != nil {
+			if _, err := db.DB.Exec("INSERT INTO `user` (`uid`, `guid`, `passwd`, `username`, `nickname`, `domain`, `role`) VALUES (?, ?, ?, ?, ?, ?, ?)", user.Uid, user.Uid, "", req.Username, req.Username, publicDomain, "USER"); err != nil {
 				res.Success = false
 				res.Error = err.Error()
 				return
@@ -61,6 +62,7 @@ func authUser(ctx context.Context, req *senrenrpc.AuthRequest, state map[string]
 		}
 	}
 
+	res.Error = ""
 	res.Sid = util.SignSession(user.GUid)
 	res.Success = true
 }

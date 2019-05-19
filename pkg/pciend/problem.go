@@ -179,7 +179,7 @@ func createProblemEditSession(ctx context.Context, req *pcirpc.CreateProblemEdit
 		return
 	}
 
-	dat, code, err := httpreq.POSTJson(editorServer+"/api/repo/pull", map[string]string{
+	dat, code, err := httpreq.POSTJson(editorServer+"/fileapi/repo/pull", map[string]string{
 		"repo": probURL,
 	})
 

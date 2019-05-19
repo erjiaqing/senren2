@@ -79,7 +79,7 @@
             height="300px"
           ></editor>
         </div>
-        <div v-html="problem.description"></div>
+        <div v-html="problem.description" ref="problemContent"></div>
       </div>
     </el-col>
   </el-row>
@@ -176,6 +176,11 @@ export default {
         return;
       }
       this.problem = res.problem;
+      this.$nextTick(function() {
+        MathJax.Hub.Queue(["Typeset", MathJax.Hub]);
+        Han(this.$refs.problemContent).render()
+        console.log("Math and Han Format Rendered");
+      });
     },
     saveCode: function() {
       localStorage.setItem(

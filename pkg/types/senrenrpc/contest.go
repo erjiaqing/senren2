@@ -25,6 +25,10 @@ type GetContestSubmissionsRequest = GetSubmissionsRequest
 
 type GetContestSubmissionsResponse = GetSubmissionsResponse
 
+type GetContestSubmissionRequest = GetSubmissionRequest
+
+type GetContestSubmissionResponse = GetSubmissionResponse
+
 type GetContestsResponse struct {
 	SuccessError
 	Contests []*base.Contest `json:"contests"`
