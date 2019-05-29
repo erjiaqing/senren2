@@ -9,6 +9,12 @@ type SuccessError struct {
 	Error   string `json:"error"`
 }
 
+type PagerSuccessError struct {
+	SuccessError
+	Page  int `json:"page"`
+	Total int `json:"total"`
+}
+
 type SuccessErrorOnly SuccessError
 
 type Domain string

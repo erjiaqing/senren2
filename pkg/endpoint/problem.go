@@ -52,15 +52,38 @@ func getProblem(ctx context.Context, req *senrenrpc.GetProblemRequest, state map
 }
 
 func getProblems(ctx context.Context, req *senrenrpc.GetProblemsRequest, state map[string]string, res *senrenrpc.GetProblemsResponse) {
+	queryPage := "SELECT count(*) FROM problem WHERE domain = ?"
+
 	query := "SELECT uid, rootuid, domain, alias, title, score, releasetime FROM problem WHERE domain = ?"
 
 	if state["role"] == "ADMIN" || state["role"] == "ROOT" {
+		queryPage = queryPage + " AND (releasetime < ? OR 1 = 1)"
 		query = query + " AND (releasetime < ? OR 1 = 1)"
 	} else {
+		queryPage = queryPage + " AND releasetime < ?"
 		query = query + " AND releasetime < ?"
 	}
 
-	row, err := db.DB.Query(query, req.Domain, time.Now())
+	query += " LIMIT ?, ?"
+	if req.Page == 0 {
+		req.Page = 1
+	}
+
+	if req.Count <= 0 || req.Count > 100 {
+		req.Count = 100
+	}
+
+	ts := time.Now()
+
+	totalCountQry := db.DB.QueryRow(queryPage, req.Domain, ts)
+
+	totalCountQry.Scan(&res.Total)
+	res.Page = req.Page
+	if (req.Page-1)*req.Count+1 > res.Total {
+		res.Page = (res.Total + req.Count - 1) / req.Count
+	}
+
+	row, err := db.DB.Query(query, req.Domain, ts, (req.Page-1)*req.Count, req.Count)
 	if err != nil {
 		res.Success = false
 		res.Error = err.Error()

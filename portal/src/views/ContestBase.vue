@@ -1,95 +1,34 @@
 <template>
-  <el-row :gutter="20">
-    <el-col
-      :xs="24"
-      :sm="24"
-      :md="8"
-      style="float:right"
+  <div>
+    <!-- <div class="grid-content problem-title">
+      <span v-if="contest">{{ contest.title }}</span>
+      <span v-else-if="loading">Loading...</span>
+      <span v-else-if="error">「比赛加载失败」</span>
+    </div>
+    <div
+      class="grid-content"
+      v-if="contest"
     >
-      <div class="grid-content problem-title">
-        <span v-if="contest">{{ contest.title }}</span>
-        <span v-else-if="loading">Loading...</span>
-        <span v-else-if="error">「比赛加载失败」</span>
-      </div>
-      <div
-        class="grid-content"
-        v-if="contest"
+      <span>比赛结束于 {{ contest.end_time | moment("from", "now") }}</span>
+    </div> -->
+    <div v-if="error">
+      <el-alert
+        title="请求失败"
+        type="error"
+        description="可能的原因：服务器故障、网络问题或比赛不存在"
+        show-icon
       >
-        <span>比赛结束于 {{ contest.end_time | moment("from", "now") }}</span>
-      </div>
-      <div class="grid-content problem-title">
-        <el-button-group>
-          <el-button
-            icon="el-icon-more"
-            @click="$router.push('/' + $route.params.domain + '/contest/' + $route.params.uid)"
-          >试题列表</el-button>
-          <el-button icon="el-icon-more" @click="$router.push('/' + $route.params.domain + '/contest/' + $route.params.uid + '/submissions/;' + user.uid)">提交状态</el-button>
-          <el-button icon="el-icon-list"
-            @click="$router.push('/' + $route.params.domain + '/contest/' + $route.params.uid + '/rank')">比赛榜单</el-button>
-          <el-button icon="el-icon-tickets">讨论区</el-button>
-          <el-button
-            icon="el-icon-edit"
-            @click="gotoEditor"
-            v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
-          >编辑比赛</el-button>
-        </el-button-group>
-      </div>
-      <div
-        class="grid-content problem-content"
-        v-if="contest"
-      >
-        <el-form
-          label-position="left"
-          style="text-align:left"
-          inline
-        >
-          <el-form-item
-            class="contest_metadata_item"
-            label="开始时间"
-          >
-            {{ contest.start_time | moment("YYYY-MM-DD HH:mm:ss") }}
-          </el-form-item>
-          <el-form-item
-            class="contest_metadata_item"
-            label="结束时间"
-          >
-            {{ contest.end_time | moment("YYYY-MM-DD HH:mm:ss") }}
-          </el-form-item>
-          <el-form-item
-            class="contest_metadata_item"
-            label="封榜时间"
-          >
-            {{ contest.freeze_time | moment("YYYY-MM-DD HH:mm:ss") }}
-          </el-form-item>
-          <el-form-item
-            class="contest_metadata_item"
-            label="比赛规则"
-          >
-            {{ contest.type }}
-          </el-form-item>
-        </el-form>
-        <div id="contest_desc">
-          <div v-html="contest.description"></div>
-        </div>
-      </div>
-    </el-col>
-    <el-col
-      :xs="24"
-      :sm="24"
-      :md="16"
+      </el-alert>
+    </div>
+    <router-view></router-view>
+    <div
+      id="contest_desc"
+      v-if="contest && contest.description && $route.name == 'contest_index'"
+      style="text-align: left;margin-top: 20px"
     >
-      <div v-if="error">
-        <el-alert
-          title="请求失败"
-          type="error"
-          description="可能的原因：服务器故障、网络问题或比赛不存在"
-          show-icon
-        >
-        </el-alert>
-      </div>
-      <router-view></router-view>
-    </el-col>
-  </el-row>
+      <div v-html="contest.description"></div>
+    </div>
+  </div>
 </template>
 
 <script>

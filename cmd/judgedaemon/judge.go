@@ -20,6 +20,8 @@ func judge(task *base.PCITaskItem, desc *base.PCIJudgeTaskDesc) string {
 	prob := checkProblem(task.Problem)
 	probpath := cloneProblemVersion(task.Problem, prob.CurrentVersion)
 
+	cloneLock.RLock()
+	defer cloneLock.RUnlock()
 	currpath, err := os.Getwd()
 
 	if err != nil {

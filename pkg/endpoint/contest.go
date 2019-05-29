@@ -152,7 +152,7 @@ func getContestSubmission(ctx context.Context, req *senrenrpc.GetContestSubmissi
 	row := db.DB.QueryRowContext(ctx, "SELECT uid, freeze_time, release_time FROM contest WHERE `uid` = ? AND `domain` = ?", tFilter[0], req.Domain)
 	if err := row.Scan(&contest.Uid, &contest.FreezeTime, &contest.ReleaseTime); err != nil {
 		res.Success = false
-		res.Error = err.Error()
+		res.Error = "failed to get contest: " + err.Error()
 		return
 	}
 
@@ -173,7 +173,7 @@ func getContestSubmission(ctx context.Context, req *senrenrpc.GetContestSubmissi
 	getSubmission(ctx, req, state, res)
 
 	if hideState && res.Submission != nil {
-		if res.Submission.Uid != state["uid"] {
+		if res.Submission.UserUid != state["uid"] {
 			res.Submission = nil
 			res.Success = false
 			res.Error = "not found"

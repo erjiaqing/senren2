@@ -15,6 +15,12 @@
               <div
                 class="grid-content"
                 style="line-height:60px;text-align:left"
+                v-if="$route.name && $route.name.startsWith('contest_')"
+              >{{ contest ? contest.title : "千练万花 - 比赛" }}</div>
+              <div
+                class="grid-content"
+                style="line-height:60px;text-align:left"
+                v-else
               >{{ domain ? (domain.title || domain.alias || domain.uid) : "千练万花" }}</div>
               <!-- TODO 根据当前用户所在的域显示对应的名称 -->
             </el-col>
@@ -109,42 +115,70 @@
                 class="grid-content"
                 style="text-align: left; line-height:60px"
               >
-                <el-button
-                  type="text"
-                  @click="$router.push('/' + ($route.params.domain ? $route.params.domain : ''))"
-                >主页</el-button>
-                <el-button
-                  type="text"
-                  @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/problems')"
-                >题库</el-button>
-                <el-button
-                  type="text"
-                  @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/contests')"
-                >比赛</el-button>
-                <el-button
-                  type="text"
-                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000'"
-                  @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/homeworks')"
-                >作业</el-button>
-                <el-button
-                  type="text"
-                  v-if="$route.params.domain == 'woj' || $route.params.domain == '0000000000000000'"
-                  @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/domains')"
-                >小组</el-button>
-                <el-button
-                  type="text"
-                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000'"
-                  @click="$router.push('/woj')"
-                >返回WOJ</el-button>
-                <el-button
-                  type="text"
-                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000' && guser && user && user.role == 'NONE'"
-                >加入 {{ domain.title }}</el-button>
-                <el-button
-                  type="text"
-                  v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000' && guser && user && user.role != 'NONE'"
-                  disabled
-                >已是小组成员</el-button>
+                <span v-if="$route.name && $route.name.startsWith('contest_')">
+                  <el-button
+                    type="text"
+                    @click="$router.push('/' + ($route.params.domain ? $route.params.domain : ''))"
+                  >返回首页</el-button>
+                  <el-button
+                    type="text"
+                    @click="$router.push('/' + $route.params.domain + '/contest/' + $route.params.uid)"
+                  >试题列表</el-button>
+                  <el-button
+                    type="text"
+                    @click="$router.push('/' + $route.params.domain + '/contest/' + $route.params.uid + '/submissions/;' + user.uid)"
+                  >提交状态</el-button>
+                  <el-button
+                    type="text"
+                    @click="$router.push('/' + $route.params.domain + '/contest/' + $route.params.uid + '/rank')"
+                  >比赛榜单</el-button>
+                  <el-button
+                    type="text"
+                  >讨论区</el-button>
+                  <el-button
+                    @click="$router.push('/' + $route.params.domain + '/contest/' + $route.params.uid + '/edit')"
+                    type="text"
+                    v-if="user && (user.role == 'ADMIN' || user.role == 'ROOT')"
+                  >编辑比赛</el-button>
+                </span>
+                <span v-else>
+                  <el-button
+                    type="text"
+                    @click="$router.push('/' + ($route.params.domain ? $route.params.domain : ''))"
+                  >主页</el-button>
+                  <el-button
+                    type="text"
+                    @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/problems')"
+                  >题库</el-button>
+                  <el-button
+                    type="text"
+                    @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/contests')"
+                  >比赛</el-button>
+                  <el-button
+                    type="text"
+                    v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000'"
+                    @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/homeworks')"
+                  >作业</el-button>
+                  <el-button
+                    type="text"
+                    v-if="$route.params.domain == 'woj' || $route.params.domain == '0000000000000000'"
+                    @click="$router.push('/' + ($route.params.domain ? $route.params.domain : 'woj') + '/domains')"
+                  >小组</el-button>
+                  <el-button
+                    type="text"
+                    v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000'"
+                    @click="$router.push('/woj')"
+                  >返回WOJ</el-button>
+                  <el-button
+                    type="text"
+                    v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000' && guser && user && user.role == 'NONE'"
+                  >加入 {{ domain.title }}</el-button>
+                  <el-button
+                    type="text"
+                    v-if="$route.params.domain != 'woj' && $route.params.domain != '0000000000000000' && guser && user && user.role != 'NONE'"
+                    disabled
+                  >已是小组成员</el-button>
+                </span>
               </div>
             </el-col>
           </el-row>
@@ -165,6 +199,7 @@
 <script>
 import { RPC } from "./rpc.js";
 import { ConstString } from "./consts.js";
+import { mapState } from "vuex";
 
 export default {
   name: "app",
@@ -261,6 +296,7 @@ export default {
       }
     }
   },
+  computed: mapState(["contest"]),
   destroyed() {
     window.removeEventListener("scroll", this.handleScroll);
   }
@@ -440,8 +476,28 @@ code {
   margin: 0;
 }
 
-i[class^=el-][class*= el-] {
+i[class^="el-"][class*="el-"] {
   padding-bottom: 0;
   border-bottom: none;
+}
+
+.grid-content.problem-content h1{
+  font-size: 1.4em;
+}
+.grid-content.problem-content h2{
+  font-size: 1.3em;
+}
+.grid-content.problem-content h3{
+  font-size: 1.2em;
+}
+.grid-content.problem-content h4{
+  font-size: 1.1em;
+}
+.grid-content.problem-content h5{
+  font-size: 1em;
+}
+
+.grid-content.problem-title{
+  font-size: 1.4em;
 }
 </style>

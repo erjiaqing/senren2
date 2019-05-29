@@ -15,6 +15,14 @@ type GetDomainObjectsRequest struct {
 	Filter string `json:"filter"`
 }
 
+type GetDomainObjectsPager struct {
+	Session
+	Domain `json:"domain"`
+	Page   int    `json:"page"`
+	Count  int    `json:"count"`
+	Filter string `json:"filter"`
+}
+
 type CreateDomainObjectResponse struct {
 	SuccessError
 	Domain `json:"domain"`

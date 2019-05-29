@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"sync"
 
 	"github.com/erjiaqing/senren2/pkg/httpreq"
 	"github.com/erjiaqing/senren2/pkg/types/base"
@@ -16,6 +17,8 @@ import (
 	"github.com/sirupsen/logrus"
 	git "gopkg.in/src-d/go-git.v4"
 )
+
+var cloneLock = sync.RWMutex{}
 
 func checkProblem(uid int64) *base.PCIProblem {
 	req := &pcirpc.GetProblemRequest{}
@@ -60,6 +63,9 @@ func checkProblemVersion(uid int64, expect string) bool {
 }
 
 func cloneProblemVersion(uid int64, expect string) string {
+	cloneLock.Lock()
+	defer cloneLock.Unlock()
+
 	wd, err := os.Getwd()
 	if err != nil {
 		return ""
@@ -96,5 +102,6 @@ func cloneProblemVersion(uid int64, expect string) string {
 	// docker run --privileged --mount type=bind,source=/hofioeg,target=/problem --mount type=bind,source=/home/ejq/rrtmp,target=/fj_tmp fj2-builder --tempdir /fj_tmp
 	logrus.Infof("Build problem: %d", uid)
 	exec.Command("docker", "run", "--rm", "--privileged", "--mount", fmt.Sprintf("type=bind,source=%s,target=/problem", target), "--mount", fmt.Sprintf("type=bind,source=%s,target=/fj_tmp", filepath.Join(wd, "temp")), "fj2-builder", "--tempdir", "/fj_tmp").Run()
+	logrus.Infof("Build problem: %d finished", uid)
 	return target
 }

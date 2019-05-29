@@ -52,6 +52,11 @@ export default new Router({
           component: DomainIndex,
         },
         {
+          path: 'problems/page/:page',
+          name: 'problem_list_page',
+          component: ProblemList,
+        },
+        {
           path: 'problems',
           name: 'problem_list',
           component: ProblemList,
@@ -109,7 +114,7 @@ export default new Router({
         },
         {
           path: 'contests',
-          name: 'contest_list',
+          name: 'contests_list',
           component: ContestList,
         },
         {

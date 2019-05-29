@@ -11,10 +11,10 @@ type GetProblemResponse struct {
 	Problem *base.Problem `json:"problem"`
 }
 
-type GetProblemsRequest GetDomainObjectsRequest
+type GetProblemsRequest GetDomainObjectsPager
 
 type GetProblemsResponse struct {
-	SuccessError
+	PagerSuccessError
 	Problems []*base.Problem `json:"problems"`
 }
 

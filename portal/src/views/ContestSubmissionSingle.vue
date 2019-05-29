@@ -212,7 +212,7 @@ export default {
         return;
       }
       this.loading = true;
-      let res = await RPC.doRPC("getSubmission", {
+      let res = await RPC.doRPC("getContestSubmission", {
         domain: this.$route.params.domain,
         filter: this.$route.params.uid,
         uid: this.$route.params.suid,
