@@ -23,6 +23,7 @@ func init() {
 
 	r2 := router.R.PathPrefix("/pci_problem").Subrouter()
 	r2.HandleFunc("/problemUpdate/{problem}", problemUpdate)
+	r2.HandleFunc("/problemVersionUpdate/{problem}/{version}/{sign}", problemVersionUpdate)
 
 	r := router.R.PathPrefix("/pci").Subrouter()
 	r.HandleFunc("/{method}", endpointsRouter)

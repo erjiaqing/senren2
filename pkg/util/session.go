@@ -1,14 +1,43 @@
 package util
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/base64"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 )
 
-const sigSign = "417MD2y3nUNI7e5r1CZ8x6LBLzwkMk4y8FHmrC0srJP5YHXPXUXrcYNj4Bfr417MD2y3nUNI7e5r1CZ8FLZ2vk3iTbUaUQ9v0wBk"
+var sigSign = "417MD2y3nUNI7e5r1CZ8x6LBLzwkMk4y8FHmrC0srJP5YHXPXUXrcYNj4Bfr417MD2y3nUNI7e5r1CZ8FLZ2vk3iTbUaUQ9v0wBk"
+
+func init() {
+	sigSign2 := os.Getenv("SIG_SIGN")
+	if sigSign2 != "" {
+		sigSign = sigSign2
+	}
+}
+
+func Sign(va ...string) string {
+	raw := bytes.Buffer{}
+	for _, v := range va {
+		raw.WriteString(base64.StdEncoding.EncodeToString([]byte(v)))
+		raw.WriteString("|")
+	}
+	raw.WriteString(sigSign)
+	return fmt.Sprintf("%x", sha1.Sum(raw.Bytes()))
+}
+
+func CheckSign(sig string, va ...string) bool {
+	raw := bytes.Buffer{}
+	for _, v := range va {
+		raw.WriteString(base64.StdEncoding.EncodeToString([]byte(v)))
+		raw.WriteString("|")
+	}
+	raw.WriteString(sigSign)
+	return sig == fmt.Sprintf("%x", sha1.Sum(raw.Bytes()))
+}
 
 func SignSession(uid string) string {
 	return SignSessionDomain(uid, "")

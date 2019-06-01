@@ -2,36 +2,33 @@
   <el-row>
     <el-col :span="24">
       <div v-if="error">
-        <el-alert
-          title="请求失败"
-          type="error"
-          description="可能的原因：服务器故障、网络问题或比赛不存在"
-          show-icon
-        >
-        </el-alert>
+        <el-alert title="请求失败" type="error" description="可能的原因：服务器故障、网络问题或比赛不存在" show-icon></el-alert>
       </div>
-      <div
-        class="grid-content problem-content"
-        v-if="contest"
-      >
-        <el-table
-          :data="contest.problem_list"
-          style="width: 100%"
-          @row-click="gotoProblem"
-        >
-          <el-table-column
-            label=""
-            width="100px"
-          >
-            <template slot-scope="scope">
-              {{ probIndex.charAt(scope.$index) }}
-            </template>
+      <div>
+        <div v-if="contestTimer.state == 'PENDING'">
+          <span>未开始</span>
+          <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+        </div>
+        <div v-else-if="contestTimer.state == 'RUNNING'">
+          <span>进行中</span>
+          <el-progress :show-text="false" :percentage="contestTimer.ratio * 100"></el-progress>
+          <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+        </div>
+        <div v-else-if="contestTimer.state == 'FROZEN'">
+          <span>进行中 - 封榜</span>
+          <el-progress :show-text="false" color="#E6A23C" :percentage="contestTimer.ratio * 100"></el-progress>
+          <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+        </div>
+        <div v-else-if="contestTimer.state == 'END'">
+          <span>已结束</span>
+        </div>
+      </div>
+      <div class="grid-content problem-content" v-if="contest">
+        <el-table :data="contest.problem_list" style="width: 100%" @row-click="gotoProblem">
+          <el-table-column label width="100px">
+            <template slot-scope="scope">{{ probIndex.charAt(scope.$index) }}</template>
           </el-table-column>
-          <el-table-column
-            prop="title"
-            label="标题"
-          >
-          </el-table-column>
+          <el-table-column prop="title" label="标题"></el-table-column>
         </el-table>
       </div>
     </el-col>
@@ -40,36 +37,17 @@
 
 <script>
 import { RPC } from "../rpc.js";
-import {mapState} from "vuex";
+import { mapState } from "vuex";
 
 export default {
   data() {
     return {
       probIndex: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
-      contest: null,
       loading: false,
       error: false
     };
   },
   methods: {
-    loadContest: async function() {
-      this.loading = true;
-      let res = await RPC.doRPC("getContest", {
-        domain: this.$route.params.domain,
-        uid: this.$route.params.uid
-      });
-      this.loading = false;
-      if (res == null) {
-        this.error = true;
-        return;
-      }
-      res.contest.problem_list = JSON.parse(res.contest.problem_list);
-      for (let i = 0; i < res.contest.problem_list.length; i++) {
-        res.contest.problem_list[i].$index = i;
-        res.contest.problem_list[i].$charid = this.probIndex.charAt(i);
-      }
-      this.contest = res.contest;
-    },
     gotoEditor: function() {
       this.$router.push(
         `/${this.$route.params.domain}/contest/${this.$route.params.uid}/edit`
@@ -83,15 +61,7 @@ export default {
       );
     }
   },
-  computed: mapState(["user"]),
-  watch: {
-    $route: function() {
-      this.loadContest();
-    }
-  },
-  created() {
-    this.loadContest();
-  }
+  computed: mapState(["user", "contestTimer", "contest"]),
 };
 </script>
 

@@ -194,7 +194,8 @@ export default {
         this.problem.domain = this.$route.params.domain;
       }
       let res = await RPC.doRPC("createProblem", {
-        problem: this.problem
+        problem: this.problem,
+        domain: this.$route.params.domain
       });
       this.loading = false;
       if (res == null) {

@@ -149,7 +149,7 @@ export default new Router({
         },
         {
           path: 'homework/:uid/submissions',
-          name: 'homework_editor',
+          name: 'homework_submission_list',
           component: HomeworkSubmissionList,
         },
         {

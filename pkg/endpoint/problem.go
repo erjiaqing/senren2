@@ -126,11 +126,14 @@ func getPCIDescription(ctx context.Context, req *senrenrpc.GetPCIDescriptionRequ
 }
 
 func createProblem(ctx context.Context, req *senrenrpc.CreateProblemRequest, state map[string]string, res *senrenrpc.CreateProblemResponse) {
-	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ?, alias = ? WHERE uid = ? AND (rootuid = ? OR 1 = 1) AND domain = ?"
+	if state["role"] != "ADMIN" && state["role"] != "ROOT" {
+		res.Success = false
+		res.Error = "Forbidden"
+		return
+	}
 
-	tDomain := senrenrpc.Domain(req.Problem.Domain)
-	tDomain.ConvertDomain()
-	req.Problem.Domain = string(tDomain)
+	dbExec := "UPDATE problem SET title = ? , content = ? , releasetime = ?, problemci = ?, score = ?, language_limit = ?, alias = ? WHERE uid = ? AND (rootuid = ? OR 1 = 1) AND domain = ?"
+	req.Problem.Domain = string(req.Domain)
 
 	if req.Problem.Uid == "" || req.Problem.Uid == noUID {
 		req.Problem.Uid = util.GenUid()

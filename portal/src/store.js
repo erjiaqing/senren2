@@ -9,6 +9,7 @@ export default new Vuex.Store({
     user: {},
     guser: {},
     contest: {},
+    contestTimer: {},
   },
   mutations: {
     setDomain(state, newDomain) {
@@ -22,6 +23,9 @@ export default new Vuex.Store({
     },
     setContest(state, newContest) {
       state.contest = JSON.parse(JSON.stringify(newContest));
+    },
+    setContestTimer(state, newTimer) {
+      state.contestTimer = JSON.parse(JSON.stringify(newTimer));
     }
   },
   actions: {

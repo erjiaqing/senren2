@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/erjiaqing/senren2/pkg/httpreq"
+	"github.com/erjiaqing/senren2/pkg/util"
 
 	"github.com/erjiaqing/senren2/pkg/pcidb"
 	"github.com/erjiaqing/senren2/pkg/types/base"
@@ -79,7 +80,7 @@ func createProblemTestTask(ctx context.Context, req *pcirpc.CreateProblemTestTas
 		Status:   "PENDING",
 		Desc:     string(descBytes),
 		Result:   "{}",
-		Callback: req.Callback,
+		Callback: selfAddr + "/pci_problem/problemVersionUpdate/" + strconv.FormatInt(req.Desc.ProblemUID, 10) + "/" + req.Desc.Version + "/" + util.Sign(strconv.FormatInt(req.Desc.ProblemUID, 10), req.Desc.Version),
 	}
 
 	r, err := pcidb.PCIDB.ExecContext(ctx, "INSERT INTO task (problem, creator, state, taskdesc, result, create_at, finish_at, callback) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -177,6 +178,7 @@ func updateTask(ctx context.Context, req *pcirpc.UpdatePCITaskRequest, state map
 		for i := uint(0); i < 5; i++ {
 			_, code, err := httpreq.POSTJson(retTask.Callback, retTask)
 			if code >= 300 || err != nil {
+				logrus.Warningf("Got HTTP Code %d With Error %v", code, err)
 				time.Sleep((1 << i) * time.Second / 10)
 			} else {
 				break

@@ -62,6 +62,33 @@ func checkProblemVersion(uid int64, expect string) bool {
 	return h.Hash().String() == expect
 }
 
+func cloneProblemVersionNoLock(uid int64, expect string, target string) error {
+	cloneurl, err := url.Parse(fmt.Sprintf("%s/%s/p%06d.git", gitServer, gitUserName, uid))
+	if err != nil {
+		return err
+	}
+
+	cloneurl.User = url.UserPassword(gitUserName, gitUserPass)
+
+	exec.Command("rm", "-rf", target).Run()
+
+	logrus.Infof("Clone problem: %d", uid)
+	clonecmd := exec.Command("git", "clone", "-q", "--", cloneurl.String(), target)
+	terr := &bytes.Buffer{}
+	clonecmd.Stderr = terr
+	if err := clonecmd.Run(); err != nil {
+		logrus.Errorf("Failed to clone problem: %v", err)
+		logrus.Error(terr.String())
+		return err
+	}
+
+	cmd := exec.Command("git", "checkout", expect)
+	cmd.Dir = target
+	cmd.Run()
+
+	return nil
+}
+
 func cloneProblemVersion(uid int64, expect string) string {
 	cloneLock.Lock()
 	defer cloneLock.Unlock()
@@ -76,32 +103,14 @@ func cloneProblemVersion(uid int64, expect string) string {
 		return target
 	}
 
-	cloneurl, err := url.Parse(fmt.Sprintf("%s/%s/p%06d.git", gitServer, gitUserName, uid))
-	if err != nil {
+	if err := cloneProblemVersionNoLock(uid, expect, target); err != nil {
 		return ""
 	}
-
-	cloneurl.User = url.UserPassword(gitUserName, gitUserPass)
-
-	exec.Command("rm", "-rf", target).Run()
-
-	logrus.Infof("Clone problem: %d", uid)
-	clonecmd := exec.Command("git", "clone", "-q", "--", cloneurl.String(), target)
-	terr := &bytes.Buffer{}
-	clonecmd.Stderr = terr
-	if err := clonecmd.Run(); err != nil {
-		logrus.Errorf("Failed to clone problem: %v", err)
-		logrus.Error(terr.String())
-		return ""
-	}
-
-	cmd := exec.Command("git", "checkout", expect)
-	cmd.Dir = target
-	cmd.Run()
 
 	// docker run --privileged --mount type=bind,source=/hofioeg,target=/problem --mount type=bind,source=/home/ejq/rrtmp,target=/fj_tmp fj2-builder --tempdir /fj_tmp
 	logrus.Infof("Build problem: %d", uid)
 	exec.Command("docker", "run", "--rm", "--privileged", "--mount", fmt.Sprintf("type=bind,source=%s,target=/problem", target), "--mount", fmt.Sprintf("type=bind,source=%s,target=/fj_tmp", filepath.Join(wd, "temp")), "fj2-builder", "--tempdir", "/fj_tmp").Run()
 	logrus.Infof("Build problem: %d finished", uid)
+
 	return target
 }

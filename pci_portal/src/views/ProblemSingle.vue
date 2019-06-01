@@ -94,6 +94,11 @@
               {{ scope.row.created | moment("from", "now") }}
             </template>
           </el-table-column>
+          <el-table-column label="状态">
+            <template slot-scope="scope">
+              {{ scope.row.state == "PASS" ? "测试通过" : (scope.row.state == "UNKNOWN" ? "尚未测试" : "测试失败") }}
+            </template>
+          </el-table-column>
         </el-table>
         <el-table
           :data="accessKeys"
@@ -170,9 +175,9 @@ export default {
     versionState({ row, rowIndex }) {
       if (row.state === "UNKNOWN") {
         return "warning-row";
-      } else if (row.state === "CHECKED") {
+      } else if (row.state === "PASS") {
         return "success-row";
-      } else if (row.state === "FAILED") {
+      } else if (row.state === "FAIL") {
         return "error-row";
       }
       return "";
@@ -296,6 +301,10 @@ export default {
 
   .el-table .success-row {
     background: #f0f9eb;
+  }
+
+  .el-table .error-row {
+    background: rgb(253, 226, 226);
   }
 </style>
 

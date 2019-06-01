@@ -27,6 +27,7 @@ type GetPCIDescriptionResponse struct {
 
 type CreateProblemRequest struct {
 	Session
+	Domain  `json:"domain"`
 	Problem base.Problem `json:"problem"`
 }
 

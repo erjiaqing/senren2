@@ -36,6 +36,7 @@ type GetContestsResponse struct {
 
 type CreateContestRequest struct {
 	Session
+	Domain  `json:"domain"`
 	Contest base.Contest `json:"contest"`
 }
 

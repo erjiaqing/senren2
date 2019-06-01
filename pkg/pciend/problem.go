@@ -27,12 +27,51 @@ import (
 
 var createEditSessionMutex sync.Mutex
 var editorServer string
+var selfAddr string
 
 func init() {
 	editorServer = os.Getenv("PCI_EDITOR_SERV")
 	if editorServer == "" {
 		editorServer = "http://localhost:8078"
 	}
+
+	listenAddr := os.Getenv("LISTEN_ADDR")
+	if listenAddr == "" {
+		listenAddr = ":8079"
+	}
+	selfAddr = os.Getenv("PCI_ADDR")
+	if selfAddr == "" {
+		selfAddr = "http://localhost" + listenAddr
+	}
+}
+
+func problemVersionUpdate(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	sign := params["sign"]
+	if !util.CheckSign(sign, params["problem"], params["version"]) {
+		w.Write([]byte("AUTH FAIL"))
+		return
+	}
+	reqBody, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return
+	}
+
+	retTask := &base.PCITaskItem{}
+	json.Unmarshal(reqBody, retTask)
+
+	successInfo := &struct {
+		Success bool `json:"success"`
+	}{}
+	json.Unmarshal([]byte(retTask.Result), successInfo)
+
+	state := "PASS"
+	if !successInfo.Success {
+		state = "FAIL"
+	}
+
+	pcidb.PCIDB.ExecContext(r.Context(), "UPDATE problemVersion SET state = ? WHERE p_uid = ? AND version = ?", state, params["problem"], params["version"])
+	w.Write([]byte("UPDATED"))
 }
 
 func problemUpdate(w http.ResponseWriter, r *http.Request) {
@@ -51,11 +90,28 @@ func problemUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	stat2, err := pcidb.PCIDB.PrepareContext(r.Context(), "INSERT INTO task (problem, creator, state, taskdesc, result, create_at, finish_at, callback) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
+
 	commitedVersions := 0
 
 	for _, v := range versions {
 		if _, err := stat.ExecContext(r.Context(), pid, v.Version, v.State, v.LogTime, v.Message); err == nil {
 			commitedVersions++
+			current := time.Now()
+			desc := base.PCIBuildTaskDesc{
+				PCITask:    base.PCITask{Type: "build"},
+				Version:    v.Version,
+				ProblemUID: int64(pid),
+			}
+			descBytes, err := json.Marshal(desc)
+			if err != nil {
+				continue
+			}
+			stat2.ExecContext(r.Context(), pid, ".api", "PENDING", string(descBytes), "PENDING", current, current, selfAddr+"/rpc/pci_problem/problemVersionUpdate/"+strconv.Itoa(pid)+"/"+v.Version+"/"+util.Sign(strconv.Itoa(pid), v.Version))
 		} else {
 			logrus.Errorf("Failed to do SQL: %v", err)
 		}

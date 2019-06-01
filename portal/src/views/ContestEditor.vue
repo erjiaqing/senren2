@@ -264,7 +264,7 @@ export default {
     saveContest: async function() {
       this.loading = true;
       if (this.contest.domain == "") {
-        this.contest.domain = this.$route.params.contest;
+        this.contest.domain = this.$route.params.domain;
       }
       this.contest.open_time = new Date(this.contest.open_time);
       this.contest.close_time = new Date(this.contest.close_time);
@@ -274,7 +274,8 @@ export default {
       this.contest.release_time = new Date(this.contest.release_time);
       this.contest.problem_list = JSON.stringify(this.usedProblem);
       let res = await RPC.doRPC("createContest", {
-        contest: this.contest
+        contest: this.contest,
+        domain: this.$route.params.domain
       });
       this.loading = false;
       if (res == null) {

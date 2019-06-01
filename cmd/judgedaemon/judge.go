@@ -14,6 +14,47 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func check(task *base.PCITaskItem, desc *base.PCIBuildTaskDesc) string {
+	wd, err := os.Getwd()
+	if err != nil {
+		return `{"error": "failed to check"}`
+	}
+	target := filepath.Join(wd, "temp", util.GenUid())
+	if err := cloneProblemVersionNoLock(desc.ProblemUID, desc.Version, target); err != nil {
+		return `{"error": "failed to check"}`
+	}
+
+	currpath, err := os.Getwd()
+
+	if err != nil {
+		return `{"error": "failed to check"}`
+	}
+
+	tempdir := filepath.Join(currpath, "temp", util.GenUid())
+
+	//defer os.RemoveAll(tempdir)
+	//defer os.RemoveAll(rtempdir)
+
+	os.MkdirAll(tempdir, os.ModePerm)
+
+	logrus.Infof("Check")
+	logrus.Info(strings.Join([]string{"docker", "run", "--privileged", "--mount", fmt.Sprintf("type=bind,source=%s,target=/problem", target), "--mount", fmt.Sprintf("type=bind,source=%s,target=/fj_tmp", tempdir), "--", "fj2-checker", "--tempdir", "/fj_tmp", "--docker=1"}, " "))
+	cmd := exec.Command("docker", "run", "--privileged", "--mount", fmt.Sprintf("type=bind,source=%s,target=/problem", target), "--mount", fmt.Sprintf("type=bind,source=%s,target=/fj_tmp", tempdir), "--", "fj2-checker", "--tempdir", "/fj_tmp", "--docker=1")
+	cmdOutBuff := &bytes.Buffer{}
+	cmdErrBuff := &bytes.Buffer{}
+	cmd.Stdout = cmdOutBuff
+	cmd.Stderr = cmdErrBuff
+
+	if err := cmd.Run(); err != nil {
+		logrus.Error(err)
+		logrus.Error(cmdErrBuff.String())
+	}
+
+	ioutil.WriteFile(filepath.Join(tempdir, "fj.stderr"), cmdErrBuff.Bytes(), os.ModePerm)
+
+	return cmdOutBuff.String()
+}
+
 func judge(task *base.PCITaskItem, desc *base.PCIJudgeTaskDesc) string {
 	// TODO: save file in temporary folder, and then run PCI Judger 1.5
 	// Clone problem first
@@ -28,7 +69,7 @@ func judge(task *base.PCITaskItem, desc *base.PCIJudgeTaskDesc) string {
 		return `{"error": "failed to judge"}`
 	}
 
-	defer os.Chdir(currpath)
+	// defer os.Chdir(currpath)
 
 	tempdir := filepath.Join(currpath, "temp", util.GenUid())
 	rtempdir := filepath.Join(currpath, "temp", util.GenUid())
@@ -38,9 +79,9 @@ func judge(task *base.PCITaskItem, desc *base.PCIJudgeTaskDesc) string {
 
 	os.MkdirAll(tempdir, os.ModePerm)
 	os.MkdirAll(rtempdir, os.ModePerm)
-	if err := os.Chdir(tempdir); err != nil {
-		return `{"error": "failed to judge"}`
-	}
+	// if err := os.Chdir(tempdir); err != nil {
+	// 	return `{"error": "failed to judge"}`
+	// }
 
 	if err := ioutil.WriteFile(filepath.Join(tempdir, "code"), []byte(desc.Code), os.ModePerm); err != nil {
 		return `{"error": "failed to judge"}`

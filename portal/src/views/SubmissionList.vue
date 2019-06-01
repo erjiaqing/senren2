@@ -6,20 +6,14 @@
       close-text="清除筛选"
       @close="clearFilter"
       type="info"
-    >
-    </el-alert>
-    <el-table
-      :data="submissions"
-      style="width: 100%"
-      @row-click="selectSubmission"
-    >
-      <el-table-column
-        label="评测结果"
-        width="200pt"
-      >
+    ></el-alert>
+    <el-table :data="submissions" style="width: 100%" size="mini" @row-click="selectSubmission">
+      <el-table-column label="评测结果" width="200pt">
         <template slot-scope="scope">
           <span v-if="tags['JUDGE_TAG_' + scope.row.verdict]">
-            <el-tag :type="tags['JUDGE_TAG_' + scope.row.verdict][0]">{{ tags['JUDGE_TAG_' + scope.row.verdict][1] }}</el-tag>
+            <el-tag
+              :type="tags['JUDGE_TAG_' + scope.row.verdict][0]"
+            >{{ tags['JUDGE_TAG_' + scope.row.verdict][1] }}</el-tag>
           </span>
           <span v-else>
             <el-tag>Unknown {{ scope.row.verdict }}</el-tag>
@@ -28,54 +22,52 @@
       </el-table-column>
       <el-table-column label="试题">
         <template slot-scope="scope">
-          <router-link :to="'/' + $route.params.domain + '/problem/' + scope.row.problem_uid">{{ scope.row.problem_title }}</router-link>
+          <router-link
+            :to="'/' + $route.params.domain + '/problem/' + scope.row.problem_uid"
+          >{{ scope.row.problem_title }}</router-link>
         </template>
       </el-table-column>
-      <el-table-column label="用户">
+      <el-table-column label="用户" align="right">
         <template slot-scope="scope">
           <span v-if="scope.row.user_name != ''">
-            <router-link :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid">{{ scope.row.user_name }}</router-link>
+            <router-link
+              :to="'/' + $route.params.domain + '/user/' + scope.row.user_uid"
+            >{{ scope.row.user_name }}</router-link>
           </span>
-          <span v-else><i>Unknown</i></span>
+          <span v-else>
+            <i>Unknown</i>
+          </span>
         </template>
       </el-table-column>
-      <el-table-column label="运行时间">
+      <el-table-column label="运行时间" width="120px" align="center">
         <template slot-scope="scope">
           {{ (scope.row.execute_time <
-            0)
-            ? '-'
-            :
-            ((scope.row.execute_time)
-            + " ms"
-            )
-            }}
-            </template>
-            </el-table-column>
-            <el-table-column
-            label="使用内存"
-          >
-            <template slot-scope="scope">
-              {{ (scope.row.execute_memory <
-                0)
-                ? '-'
-                :
-                util.formatSize(scope.row.execute_memory
-                *
-                1024)
-                }}
-                </template>
-                </el-table-column>
-                <el-table-column
-                label="语言"
-              >
-                <template slot-scope="scope">
-                  {{ languageAbbr[scope.row.language] }}
-                </template>
-      </el-table-column>
-      <el-table-column label="提交时间">
-        <template slot-scope="scope">
-          {{ scope.row.submit_time | moment("from", "now") }}
+          0)
+          ? '-'
+          :
+          ((scope.row.execute_time)
+          + " ms"
+          )
+          }}
         </template>
+      </el-table-column>
+      <el-table-column label="使用内存" width="120px" align="center">
+        <template slot-scope="scope">
+          {{ (scope.row.execute_memory <
+          0)
+          ? '-'
+          :
+          util.formatSize(scope.row.execute_memory
+          *
+          1024)
+          }}
+        </template>
+      </el-table-column>
+      <el-table-column label="语言" width="120px" align="center">
+        <template slot-scope="scope">{{ languageAbbr[scope.row.language] }}</template>
+      </el-table-column>
+      <el-table-column label="提交时间" width="120px" align="center">
+        <template slot-scope="scope">{{ scope.row.submit_time | moment("from", "now") }}</template>
       </el-table-column>
     </el-table>
   </div>
@@ -101,14 +93,14 @@ export default {
       loadingInterval: -1,
       languageAbbr: {
         "c.gcc99": "C",
-        "cpp.gxx98": "C++",
-        "cpp.gxx11": "C++",
+        "cpp.gxx98": "C++ 98",
+        "cpp.gxx11": "C++ 11",
         "java.java18": "Java",
-        "py.py36": "Python",
+        "py.py36": "Py 3.6",
         "cs.mono": "C#",
         "kotlin.default": "Kotlin",
         "hs.ghc7": "Haskell",
-        "php.php7": "PHP"
+        "php.php7": "PHP 7"
       }
     };
   },

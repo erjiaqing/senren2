@@ -56,6 +56,7 @@ type PCIBuildTaskDesc struct {
 	PCITask
 	Version     string `json:"lang"`
 	ProblemRepo string `json:"repo"`
+	ProblemUID  int64  `json:"uid"`
 }
 
 type PCIBuildTaskResult struct {

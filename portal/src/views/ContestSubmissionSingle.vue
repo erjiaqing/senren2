@@ -1,113 +1,33 @@
 <template>
-  <el-row>
-    <el-col :span="24">
+  <el-row :gutter="20">
+    <el-col :span="24" :md="16" :lg="18">
       <div class="grid-content submission-title">
         <span v-if="submission">
-          提交 #<span style="font-family: monospace">{{ submission.uid }}</span>
+          提交 #
+          <span style="font-family: monospace">{{ submission.uid }}</span>
         </span>
         <span v-else-if="loading">Loading...</span>
         <span v-else-if="error">提交加载失败</span>
       </div>
-    </el-col>
-    <el-col :span="24">
       <div v-if="error">
-        <el-alert
-          title="请求失败"
-          type="error"
-          description="可能的原因：服务器故障、网络问题或提交不存在"
-          show-icon
-        >
-        </el-alert>
+        <el-alert title="请求失败" type="error" description="可能的原因：服务器故障、网络问题或提交不存在" show-icon></el-alert>
       </div>
-      <div
-        class="grid-content submission-content"
-        v-if="submission"
-      >
+      <div class="grid-content submission-content" v-if="submission">
         <div id="baseinfo_container">
-          <el-form
-            label-position="left"
-            inline
-            class="submission_metainfo_container"
-          >
-            <el-form-item
-              class="submission_metainfo_item"
-              label="评测ID"
-            >
-              #<span style="font-family: monospace">{{ submission.uid }}</span>
-            </el-form-item>
-            <el-form-item
-              class="submission_metainfo_item"
-              label="评测状态"
-            >
-              <span v-if="tags['JUDGE_TAG_' + submission.verdict]">
-                <el-tag :type="tags['JUDGE_TAG_' + submission.verdict][0]">
-                  <img v-if="submission.status == 'PENDING'" src="@/assets/loading.gif"/>
-                  {{ tags['JUDGE_TAG_' + submission.verdict][1] }}</el-tag>
+          <el-form label-position="left" inline class="submission_metainfo_container">
+            <el-form-item class="submission_metainfo_item" label="试题">
+              <span v-if="contest">
+                {{ contest.uid2prob[submission.problem_uid].$charid }}.
+                {{ contest.uid2prob[submission.problem_uid].title }}
+              </span>
+              <span v-else>
+                #
+                <code>{{submission.problem_uid}}</code>
               </span>
             </el-form-item>
-            <el-form-item
-              class="submission_metainfo_item"
-              label="试题"
-            >
-              #<span style="font-family: monospace">{{ submission.problem_uid }}</span>
-            </el-form-item>
-            <el-form-item
-              class="submission_metainfo_item"
-              label="用户"
-            >
-              #<span style="font-family: monospace">{{ submission.user_uid }}</span>
-            </el-form-item>
-            <el-form-item
-              class="submission_metainfo_item"
-              label="使用时间"
-            >
-              {{ (submission.execute_time <
-                0)
-                ? '-'
-                :
-                ((submission.execute_time)
-                + " ms"
-                )
-                }}
-                </el-form-item>
-                <el-form-item
-                class="submission_metainfo_item"
-                label="使用内存"
-              >
-                {{ (submission.execute_memory <
-                  0)
-                  ? '-'
-                  :
-                  ((submission.execute_memory)
-                  + " KiB"
-                  )
-                  }}
-                  </el-form-item>
-                  <el-form-item
-                  class="submission_metainfo_item"
-                  label="提交时间"
-                >
-                  <el-tooltip
-                    class="item"
-                    effect="dark"
-                    placement="top-start"
-                  >
-                    <el-button type="text">{{ submission.submit_time | moment("from", "now") }}</el-button>
-                    <template slot="content">{{ submission.submit_time | moment("llll") }}</template>
-                  </el-tooltip>
-            </el-form-item>
-            <el-form-item
-              class="submission_metainfo_item"
-              label="评测时间"
-            >
-              <el-tooltip
-                class="item"
-                effect="dark"
-                placement="top-start"
-              >
-                <el-button type="text">{{ submission.judge_time | moment("from", "now") }}</el-button>
-                <template slot="content">{{ submission.judge_time | moment("llll") }}</template>
-              </el-tooltip>
+            <el-form-item class="submission_metainfo_item" label="用户">
+              #
+              <span style="font-family: monospace">{{ submission.user_uid }}</span>
             </el-form-item>
           </el-form>
         </div>
@@ -122,6 +42,137 @@
         ></editor>
         <h3 v-if="submission.ce_message != ''">编译器输出</h3>
         <pre style="font-size: 12pt" v-if="submission.ce_message != ''">{{ submission.ce_message }}</pre>
+        <div v-if="judgerResponse">
+          <h3>评测详情</h3>
+
+          <el-collapse accordion>
+            <el-collapse-item
+              v-for="(d) in judgerResponse.detail"
+              :key="d.name"
+              :title="d.name + ' : ' + (d.verdict != 'IG' ? (d.verdict + ' / ' + d.exe_time + ' s / ' + d.exe_memory + ' KiB') : '未评测')"
+            >
+              <template slot="title">
+                <div v-if="d.verdict == 'IG'">
+                  <span style="color: #C0C4CC">
+                    <i class="el-icon-minus"></i>
+                    {{ d.name }} 未评测
+                  </span>
+                </div>
+                <div v-else-if="d.verdict == 'AC'">
+                  <span style="color: #67C23A">
+                    <i class="el-icon-check"></i>
+                    {{ d.name }} 通过 {{ d.exe_time }} s / {{ util.formatSize(d.exe_memory * 1024) }}
+                  </span>
+                </div>
+                <div v-else>
+                  <span style="color: #F56C6C">
+                    <i class="el-icon-close"></i>
+                    {{ d.name }} {{ d.verdict }} {{ d.exe_time }} s / {{ util.formatSize(d.exe_memory * 1024) }}
+                  </span>
+                </div>
+                <!-- #67C23A -->
+                <!-- #F56C6C -->
+              </template>
+              <div v-if="d.verdict == 'IG'" style="color: #C0C4CC">未评测</div>
+              <div v-else>
+                <div v-if="d.input">
+                  <h4>输入</h4>
+                  <pre>{{ d.input }}</pre>
+                </div>
+                <div v-if="d.output">
+                  <h4>输出</h4>
+                  <pre>{{ d.output }}</pre>
+                </div>
+                <div v-if="d.answer">
+                  <h4>答案</h4>
+                  <pre>{{ d.answer }}</pre>
+                </div>
+                <div v-if="d.comment">
+                  <h4>比较器</h4>
+                  <pre>{{ d.comment }}</pre>
+                </div>
+              </div>
+            </el-collapse-item>
+          </el-collapse>
+        </div>
+      </div>
+    </el-col>
+    <el-col :span="24" :md="8" :lg="6">
+      <div class="problem-sidebar">
+        <el-card
+          class="box-card"
+          shadow="hover"
+          :body-style="{padding: '0'}"
+          style="margin-bottom: 20px"
+        >
+          <div class="problem-sidebar-item">
+            <div v-if="contestTimer.state == 'PENDING'">
+              <span>未开始</span>
+              <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+            </div>
+            <div v-else-if="contestTimer.state == 'RUNNING'">
+              <span>进行中</span>
+              <el-progress :show-text="false" :percentage="contestTimer.ratio * 100"></el-progress>
+              <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+            </div>
+            <div v-else-if="contestTimer.state == 'FROZEN'">
+              <span>进行中 - 封榜</span>
+              <el-progress
+                :show-text="false"
+                color="#E6A23C"
+                :percentage="contestTimer.ratio * 100"
+              ></el-progress>
+              <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+            </div>
+            <div v-else-if="contestTimer.state == 'END'">
+              <span>已结束</span>
+            </div>
+          </div>
+        </el-card>
+        <el-card
+          class="box-card"
+          shadow="hover"
+          :body-style="{padding: '0'}"
+          style="margin-bottom: 20px"
+        >
+          <div class="problem-sidebar-item">
+            <span>评测状态</span>
+            <span style="float: right;" v-if="tags['JUDGE_TAG_' + submission.verdict]">
+              <el-tag :type="tags['JUDGE_TAG_' + submission.verdict][0]">
+                <img v-if="submission.status == 'PENDING'" src="@/assets/loading.gif">
+                {{ tags['JUDGE_TAG_' + submission.verdict][1] }}
+              </el-tag>
+            </span>
+          </div>
+          <div class="problem-sidebar-item" v-if="submission.execute_time >= 0">
+            <span>使用时间</span>
+            <span style="float: right; padding: 3px 0">{{ submission.execute_time }} ms</span>
+          </div>
+          <div class="problem-sidebar-item" v-if="submission.execute_memory >= 0">
+            <span>峰值内存</span>
+            <span
+              style="float: right; padding: 3px 0"
+            >{{ util.formatSize(submission.execute_memory * 1024) }}</span>
+          </div>
+          <div class="problem-sidebar-item">
+            <span>提交时间</span>
+            <span style="float: right; padding: 3px 0">
+              <el-tooltip class="item" effect="dark" placement="top-start">
+                <el-button type="text">{{ submission.submit_time | moment("from", "now") }}</el-button>
+                <template slot="content">{{ submission.submit_time | moment("llll") }}</template>
+              </el-tooltip>
+            </span>
+          </div>
+          <div class="problem-sidebar-item">
+            <span>评测时间</span>
+            <span style="float: right; padding: 3px 0">
+              <el-tooltip class="item" effect="dark" placement="top-start">
+                <el-button type="text">{{ submission.judge_time | moment("from", "now") }}</el-button>
+                <template slot="content">{{ submission.judge_time | moment("llll") }}</template>
+              </el-tooltip>
+            </span>
+          </div>
+        </el-card>
       </div>
     </el-col>
   </el-row>
@@ -130,6 +181,8 @@
 <script>
 import { RPC } from "../rpc.js";
 import { ConstString } from "../consts.js";
+import { mapState } from "vuex";
+import { Util } from "../util.js";
 
 export default {
   data() {
@@ -144,6 +197,8 @@ export default {
       codeHighlight: "",
       languages: {},
       loadingInterval: -1,
+      util: Util,
+      judgerResponse: {},
       languagePool: [
         {
           label: "C (C99 with GCC)",
@@ -215,7 +270,7 @@ export default {
       let res = await RPC.doRPC("getContestSubmission", {
         domain: this.$route.params.domain,
         filter: this.$route.params.uid,
-        uid: this.$route.params.suid,
+        uid: this.$route.params.suid
       });
       this.loading = false;
       if (res == null) {
@@ -225,6 +280,31 @@ export default {
       this.submission = res.submission;
       this.langChange(res.submission.language);
       this.code = this.submission.code;
+
+      let ti = JSON.parse(this.submission.judger_response);
+      let compilePos = 0;
+      if (ti && ti.detail) {
+        for (let i = 0; i < ti.detail.length; i++) {
+          if (ti.detail[i].name == "compile") {
+            compilePos = i;
+          } else {
+            if (ti.detail[i].verdict == "AC") {
+              ti.detail[i].icon = "el-icon-success";
+            } else if (ti.detail[i].verdict == "IG") {
+              ti.detail[i].icon = "el-icon-minus";
+            } else {
+              ti.detail[i].icon = "el-icon-error";
+            }
+          }
+        }
+        let compileDat = ti.detail[compilePos];
+        compileDat.exe_memory /= 1024;
+        compileDat.name = "编译";
+        compileDat.icon = "el-icon-cpu";
+        ti.detail.splice(compilePos, 1);
+        ti.detail.unshift(compileDat);
+      }
+      this.judgerResponse = ti;
     },
     langChange: function(newLang) {
       console.log(`Switched to ${newLang}`);
@@ -251,6 +331,7 @@ export default {
       require("brace/snippets/javascript"); //snippet
     }
   },
+  computed: mapState(["user", "contest", "contestTimer"]),
   watch: {
     $route: function() {
       this.loadProblem();

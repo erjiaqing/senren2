@@ -62,13 +62,13 @@ func processGeneralTask(taskjson string) interface{} {
 }
 
 func doGeneralTask(task *base.PCITaskItem, desc interface{}) {
-	switch desc.(type) {
+	switch x := desc.(type) {
 	case *base.PCIJudgeTaskDesc:
-		task.Result = judge(task, desc.(*base.PCIJudgeTaskDesc))
+		task.Result = judge(task, x)
 		task.Status = "FINISHED"
 	case *base.PCIBuildTaskDesc:
-		task.Status = "NOT_IMPL"
-		task.Result = ""
+		task.Result = check(task, x)
+		task.Status = "FINISHED"
 	default:
 		task.Status = "FAIL"
 		task.Result = `{"error": "unknown task"}`

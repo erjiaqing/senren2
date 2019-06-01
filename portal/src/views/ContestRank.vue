@@ -1,58 +1,67 @@
 <template>
   <div>
-    <el-alert
-      title="单击表格某行可以查看用户提交情况。"
-      type="info"
-      :closable="false"
-    >
-    </el-alert>
+    <div>
+      <div v-if="contestTimer.state == 'PENDING'">
+        <span>未开始</span>
+        <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+      </div>
+      <div v-else-if="contestTimer.state == 'RUNNING'">
+        <span>进行中</span>
+        <el-progress :show-text="false" :percentage="contestTimer.ratio * 100"></el-progress>
+        <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+      </div>
+      <div v-else-if="contestTimer.state == 'FROZEN'">
+        <span>进行中 - 封榜</span>
+        <el-progress :show-text="false" color="#E6A23C" :percentage="contestTimer.ratio * 100"></el-progress>
+        <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+      </div>
+      <div v-else-if="contestTimer.state == 'END'">
+        <span>已结束</span>
+      </div>
+    </div>
+
     <el-table
       :data="rankList.rank"
       :row-class-name="tableIsSelf"
       :summary-method="getSummaries"
       @row-click="gotoSubmissionList"
       show-summary
+      size="mini"
       style="width: 100%"
     >
-      <el-table-column
-        :label="v.text"
-        v-for="v in rankList.title"
-        :key="v.field"
-      >
-        <template slot-scope="scope">
-          {{ scope.row[v.field] }}
-        </template>
+      <el-table-column :label="v.text" v-for="v in rankList.title" :key="v.field">
+        <template slot-scope="scope">{{ scope.row[v.field] }}</template>
       </el-table-column>
       <el-table-column fixed>
-        <template slot-scope="scope">
-          {{ scope.row.user.name }}
-        </template>
+        <template slot-scope="scope">{{ scope.row.user.name }}</template>
       </el-table-column>
       <el-table-column
         v-for="(v, id) in rankList.problem"
         :key="id"
         :label="contest.problem_list[id].$charid"
+        align="center"
       >
         <template slot-scope="scope">
           <i
             class="submission-ac el-icon-circle-check"
             v-if="scope.row.result[id].state == 'AC'"
-          > {{ scope.row.result[id].time }}</i>
+          >{{ scope.row.result[id].time }}</i>
           <i
             class="submission-ac el-icon-success"
             v-if="scope.row.result[id].state == 'AC_FIRST'"
-          > {{ scope.row.result[id].time }}</i>
+          >{{ scope.row.result[id].time }}</i>
           <i
             class="submission-wa el-icon-remove-outline"
             v-if="scope.row.result[id].state == 'NO'"
-          > {{ scope.row.result[id].time }}</i>
+          >{{ scope.row.result[id].time }}</i>
           <i
             class="submission-pending el-icon-time"
             v-if="scope.row.result[id].state == 'PENDING'"
-          > {{ scope.row.result[id].time }}</i>
+          >{{ scope.row.result[id].time }}</i>
         </template>
       </el-table-column>
     </el-table>
+    <el-alert title="单击表格某行可以查看用户提交情况。" type="info" :closable="false"></el-alert>
   </div>
 </template>
 
@@ -128,9 +137,9 @@ export default {
     gotoSubmissionList(e) {
       if (e.uid != "") {
         this.$router.push(
-          `/${this.$route.params.domain}/contest/${this.contest.uid}/submissions/;${
-            e.user.uid
-          }`
+          `/${this.$route.params.domain}/contest/${
+            this.contest.uid
+          }/submissions/;${e.user.uid}`
         );
       }
     },
@@ -151,8 +160,12 @@ export default {
           sums[index] = "";
           return;
         }
-        let vals = this.rankList.problem[index - 1 - this.rankList.title.length];
-        sums[index] = `${vals.ac} / ${vals.att} / ${vals.ac ? vals.firstblood : "---"}`;
+        let vals = this.rankList.problem[
+          index - 1 - this.rankList.title.length
+        ];
+        sums[index] = `${vals.ac} / ${vals.att} / ${
+          vals.ac ? vals.firstblood : "---"
+        }`;
       });
 
       return sums;
@@ -165,7 +178,7 @@ export default {
       );
     }
   },
-  computed: mapState(["user", "contest"]),
+  computed: mapState(["user", "contest", "contestTimer"]),
   watch: {
     $route: function() {
       this.loadSubmission();

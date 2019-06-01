@@ -25,7 +25,8 @@ Object.defineProperties(Vue.prototype, {
     get: function () {
       return EventBus
     }
-  }
+  },
+  $moment: moment
 });
 
 new Vue({

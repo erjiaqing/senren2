@@ -1,5 +1,6 @@
 <template>
-  <div>
+  <el-row :gutter="20">
+    <el-col :span="24" :md="16" :lg="18">
     <el-alert
       title="显示的是经过筛选的提交列表"
       v-if="filterApplied"
@@ -53,7 +54,61 @@
         </template>
       </el-table-column>
     </el-table>
-  </div>
+    </el-col>
+
+    <el-col :span="24" :md="8" :lg="6">
+      <div class="problem-sidebar">
+        <el-card
+          class="box-card"
+          shadow="hover"
+          :body-style="{padding: '0'}"
+          style="margin-bottom: 20px"
+        >
+          <div class="problem-sidebar-item">
+            <div v-if="contestTimer.state == 'PENDING'">
+              <span>未开始</span>
+              <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+            </div>
+            <div v-else-if="contestTimer.state == 'RUNNING'">
+              <span>进行中</span>
+              <el-progress :show-text="false" :percentage="contestTimer.ratio * 100"></el-progress>
+              <div class="timerText" style="padding: 3px 0">{{ contestTimer.remain }}</div>
+            </div>
+            <div v-else-if="contestTimer.state == 'FROZEN'">
+              <span>进行中 - 封榜</span>
+              <el-progress :show-text="false" color="#E6A23C" :percentage="contestTimer.ratio * 100"></el-progress>
+              <div
+                class="timerText"
+                style="padding: 3px 0"
+              >{{ contestTimer.remain }}</div>
+            </div>
+            <div v-else-if="contestTimer.state == 'END'">
+              <span>已结束</span>
+            </div>
+          </div>
+        </el-card>
+
+        <el-card
+          class="box-card"
+          shadow="hover"
+          :body-style="{padding: '0'}"
+          style="margin-bottom: 20px"
+        >
+          <div @click="gotoProblem">
+            <div
+              class="problem-sidebar-item"
+              v-for="p in contest.problem_list"
+              :key="p.uid"
+              :data-click-url="`/${$route.params.domain}/contest/${$route.params.uid}/submissions/${p.uid}`"
+            >
+              <span class="problem-charid">{{ p.$charid }}.</span>
+              {{ p.title }}
+            </div>
+          </div>
+        </el-card>
+      </div>
+    </el-col>
+  </el-row>
 </template>
 
 <script>
@@ -127,16 +182,18 @@ export default {
       }
       return "";
     },
-    computed: mapState(["user", "contest"]),
     clearFilter() {
       this.$router.push(
         `/${this.$route.params.domain}/contest/${
           this.$route.params.uid
         }/submissions`
       );
-    }
+    },
+    gotoProblem: function(e) {
+      this.$router.push(e.target.dataset.clickUrl);
+    },
   },
-  computed: mapState(["user", "contest"]),
+  computed: mapState(["user", "contest", "contestTimer"]),
   watch: {
     $route: function() {
       this.loadSubmission();
